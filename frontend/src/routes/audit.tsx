@@ -42,11 +42,10 @@ function AuditPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 sm:px-8">
+    <main className="flex-1 bg-background px-4 py-10 sm:px-8">
       <div className="mx-auto max-w-5xl">
         <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="mb-2 text-sm font-semibold tracking-wide text-primary">StartAI</p>
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Auditoria da conta</h1>
             <p className="mt-2 text-sm text-muted-foreground">
               Acompanhe acessos e ações realizadas nas suas entrevistas e roadmaps.
