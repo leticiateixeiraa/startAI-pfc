@@ -36,7 +36,7 @@ function InterviewQuestionsPage() {
 
   if (!session) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+      <main className="flex flex-1 flex-col items-center justify-center bg-background px-4">
         <div className="max-w-md text-center">
           <h1 className="text-xl font-semibold text-foreground">Nenhuma entrevista em andamento</h1>
           <p className="mt-2 text-sm text-muted-foreground">
@@ -89,7 +89,7 @@ function InterviewQuestionsPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-background px-4 py-10">
+    <main className="flex flex-1 flex-col bg-background px-4 py-10">
       <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
         <header className="mb-8 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Entrevista simulada</h1>

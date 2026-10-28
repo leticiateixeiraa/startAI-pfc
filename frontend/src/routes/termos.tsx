@@ -9,9 +9,8 @@ export const Route = createFileRoute("/termos")({
 
 function TermsPage() {
   return (
-    <main className="min-h-screen bg-background px-4 py-12">
+    <main className="flex-1 bg-background px-4 py-12">
       <article className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-9">
-        <p className="mb-2 text-sm font-semibold tracking-wide text-primary">StartAI</p>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Termo de Uso</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Última atualização: [25/09/2025] — Versão 1.0

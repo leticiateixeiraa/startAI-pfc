@@ -64,10 +64,9 @@ function InterviewSetupPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center bg-background px-4 py-12 sm:py-20">
+    <main className="flex flex-1 flex-col items-center bg-background px-4 py-12 sm:py-20">
       <div className="w-full max-w-xl">
         <header className="mb-8 text-center">
-          <p className="mb-2 text-sm font-semibold tracking-wide text-primary">StartAI</p>
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Prepare sua entrevista
           </h1>

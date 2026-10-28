@@ -34,12 +34,11 @@ function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <main className="flex flex-1 items-center justify-center bg-background px-4 py-12">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-9"
       >
-        <p className="mb-2 text-sm font-semibold tracking-wide text-primary">StartAI</p>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Bem-vindo de volta</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
           Entre para preparar sua próxima entrevista simulada.

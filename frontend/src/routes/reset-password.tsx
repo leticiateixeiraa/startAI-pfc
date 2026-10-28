@@ -40,7 +40,7 @@ function PaginaRedefinirSenha() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+    <main className="flex flex-1 items-center justify-center bg-background px-4 py-12">
       <form
         onSubmit={aoEnviar}
         className="w-full max-w-md rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-9"
