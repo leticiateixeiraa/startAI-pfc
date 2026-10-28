@@ -121,3 +121,30 @@ def test_deve_aplicar_a_mesma_regra_de_senha_forte_na_redefinicao_de_senha():
 
     # Assert
     assert "caractere especial" in erro.value.errors()[0]["msg"]
+
+
+# --- Validação do nome no cadastro -------------------------------------------
+
+
+def test_deve_aceitar_cadastro_sem_nome():
+    assert UserCreate(**_cadastro_com_senha(SENHA_FORTE)).name is None
+
+
+def test_deve_remover_espacos_extras_do_nome():
+    dados = {**_cadastro_com_senha(SENHA_FORTE), "name": "  Letícia   Teixeira "}
+    assert UserCreate(**dados).name == "Letícia Teixeira"
+
+
+@pytest.mark.parametrize(
+    ("nome", "mensagem"),
+    [
+        ("   ", "pelo menos 2 caracteres"),
+        ("A", "pelo menos 2 caracteres"),
+        ("x" * 101, "no máximo 100 caracteres"),
+        ("12345", "precisa conter letras"),
+    ],
+)
+def test_deve_recusar_nome_invalido(nome, mensagem):
+    dados = {**_cadastro_com_senha(SENHA_FORTE), "name": nome}
+    with pytest.raises(ValidationError, match=mensagem):
+        UserCreate(**dados)

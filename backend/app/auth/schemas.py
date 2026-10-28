@@ -9,6 +9,8 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 CURRENT_TERMS_VERSION = "1.0"
 BCRYPT_MAX_BYTES = 72
 PASSWORD_MIN_LENGTH = 8
+NAME_MIN_LENGTH = 2
+NAME_MAX_LENGTH = 100
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -16,6 +18,21 @@ class UserCreate(BaseModel):
     name: str | None = None
     terms_accepted: bool
     terms_version: str = CURRENT_TERMS_VERSION
+
+    @field_validator("name")
+    @classmethod
+    def validar_nome(cls, value: str | None) -> str | None:
+        # O nome é opcional na API, mas, quando enviado, precisa ser válido.
+        if value is None:
+            return None
+        value = " ".join(value.split())  # remove espaços extras
+        if len(value) < NAME_MIN_LENGTH:
+            raise ValueError(f"O nome precisa ter pelo menos {NAME_MIN_LENGTH} caracteres")
+        if len(value) > NAME_MAX_LENGTH:
+            raise ValueError(f"O nome pode ter no máximo {NAME_MAX_LENGTH} caracteres")
+        if not any(c.isalpha() for c in value):
+            raise ValueError("O nome precisa conter letras")
+        return value
 
     @field_validator("terms_accepted")
     @classmethod
