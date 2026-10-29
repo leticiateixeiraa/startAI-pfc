@@ -12,9 +12,10 @@ from app.interview.router import router as interview_router
 from app.questions.router import router as questions_router
 from app.audit.router import router as audit_router
 from app.roadmap.router import router as roadmap_router
+from app.admin.router import router as admin_router
 
 
-app = FastAPI(title="EntrevistaIA API")
+app = FastAPI(title="StartAI API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -32,6 +33,7 @@ app.include_router(interview_router)
 app.include_router(questions_router)
 app.include_router(audit_router)
 app.include_router(roadmap_router)
+app.include_router(admin_router)
 
 
 @app.on_event("startup")
@@ -57,6 +59,15 @@ def on_startup():
         if "terms_version" not in user_columns:
             connection.execute(
                 text("ALTER TABLE users ADD COLUMN terms_version VARCHAR(20)")
+            )
+        # feat(admin): compatibilidade com bancos criados antes dos papéis.
+        if "role" not in user_columns:
+            connection.execute(
+                text("ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'")
+            )
+        if "is_active" not in user_columns:
+            connection.execute(
+                text("ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE")
             )
 
 

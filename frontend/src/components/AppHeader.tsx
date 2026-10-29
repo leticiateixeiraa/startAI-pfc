@@ -3,13 +3,16 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { LogOut, Menu, Mic, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { logout } from "@/services/authService";
+import { getCurrentUser, getStoredRole, logout } from "@/services/authService";
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { to: "/home", label: "Início" },
   { to: "/interview/setup", label: "Nova entrevista" },
   { to: "/audit", label: "Auditoria" },
 ] as const;
+
+// feat(admin): link exibido só para administradores (o back-end também confere).
+const ADMIN_NAV_ITEM = { to: "/admin", label: "Administração" } as const;
 
 function hasToken() {
   try {
@@ -25,15 +28,33 @@ export function AppHeader() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [isLoggedIn, setIsLoggedIn] = useState(hasToken);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => getStoredRole() === "admin");
 
   useEffect(() => {
-    setIsLoggedIn(hasToken());
+    const loggedIn = hasToken();
+    setIsLoggedIn(loggedIn);
     setMenuOpen(false);
+    if (!loggedIn) {
+      setIsAdmin(false);
+      return;
+    }
+    const role = getStoredRole();
+    if (role) {
+      setIsAdmin(role === "admin");
+    } else {
+      // Sessões abertas antes desta versão ainda não têm o papel salvo.
+      getCurrentUser()
+        .then((user) => setIsAdmin(user.role === "admin"))
+        .catch(() => setIsAdmin(false));
+    }
   }, [pathname]);
+
+  const NAV_ITEMS = isAdmin ? [...BASE_NAV_ITEMS, ADMIN_NAV_ITEM] : BASE_NAV_ITEMS;
 
   function handleLogout() {
     logout();
     setIsLoggedIn(false);
+    setIsAdmin(false);
     navigate({ to: "/" });
   }
 

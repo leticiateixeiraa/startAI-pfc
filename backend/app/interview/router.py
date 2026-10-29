@@ -10,7 +10,7 @@ o resto do módulo (POST /interviews/{id}/answer) não deve precisar mudar.
 """
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
@@ -58,11 +58,20 @@ def history(
 @router.post("/mock-start", response_model=StartInterviewOut, status_code=status.HTTP_201_CREATED)
 def mock_start(
     payload: StartInterviewIn,
+    request: Request,
     user_id: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     session = service.start_mock_session(db, uuid.UUID(user_id), payload.category)
-    record_event(db, "interview.started", uuid.UUID(user_id), "interview_session", str(session.id), {"category": session.category})
+    record_event(
+        db,
+        "interview.started",
+        uuid.UUID(user_id),
+        "interview_session",
+        str(session.id),
+        {"category": session.category},
+        ip_address=request.client.host if request.client else None,
+    )
     db.commit()
     return StartInterviewOut(session_id=session.id, questions=[session.current_question_text])
 
@@ -71,6 +80,7 @@ def mock_start(
 def answer(
     session_id: uuid.UUID,
     payload: AnswerIn,
+    request: Request,
     user_id: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -92,6 +102,7 @@ def answer(
         "interview_session",
         str(session.id),
         {"adapted": adapted, "finished": finished},
+        ip_address=request.client.host if request.client else None,
     )
     db.commit()
 

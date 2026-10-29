@@ -27,6 +27,7 @@ api.interceptors.response.use(
     const isLoginRequest = error?.config?.url?.includes("/auth/login");
     if (error?.response?.status === 401 && !isLoginRequest) {
       localStorage.removeItem("access_token");
+      localStorage.removeItem("user_role");
       window.location.assign("/");
     }
     return Promise.reject(error);

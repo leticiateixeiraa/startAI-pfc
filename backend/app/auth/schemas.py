@@ -61,10 +61,15 @@ class UserLogin(BaseModel):
     password: str
 
 
+ROLE_USER = "user"
+ROLE_ADMIN = "admin"
+
+
 class UserOut(BaseModel):
     id: uuid.UUID
     email: EmailStr
     name: str | None = None
+    role: str = ROLE_USER
 
     class Config:
         from_attributes = True

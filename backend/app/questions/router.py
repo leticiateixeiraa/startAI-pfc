@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
@@ -23,6 +23,7 @@ def categories():
 @router.post("/interviews", response_model=InterviewSessionOut, status_code=status.HTTP_201_CREATED)
 def start_interview(
     payload: StartInterviewIn,
+    request: Request,
     user_id: str = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -58,6 +59,7 @@ def start_interview(
         "interview_session",
         str(session.id),
         {"presentation_type": payload.presentation_type, "category": category},
+        ip_address=request.client.host if request.client else None,
     )
     db.commit()
     return InterviewSessionOut(

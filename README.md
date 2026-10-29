@@ -128,6 +128,27 @@ apresentação. `GET /roadmaps` retorna os planos do usuário.
 As modalidades `comportamental`, `tecnica`, `mista` e `apresentacao_pessoal`
 possuem regras próprias no prompt do Gemini.
 
+## Administração
+
+O sistema tem dois papéis: **usuário** (padrão de todo cadastro) e
+**administrador**. O administrador acessa o menu "Administração", com:
+
+- **Painel** (`GET /admin/metrics`): usuários, entrevistas, taxa de conclusão,
+  logins com falha, entrevistas por dia e por tipo;
+- **Usuários** (`GET /admin/users`, `PATCH /admin/users/{id}`): busca e
+  desativação/reativação de contas. Conta desativada perde o acesso na hora;
+- **Auditoria geral** (`GET /admin/audit/logs`): eventos de todos os usuários,
+  com filtros por usuário, ação e período. O próprio acesso fica auditado.
+
+O administrador **não** vê o conteúdo das respostas das entrevistas
+(minimização de dados, LGPD). O cadastro público nunca cria administradores:
+o papel é concedido por quem tem acesso ao servidor, na pasta `backend/`:
+
+```bash
+python -m app.scripts.promote_admin email@exemplo.com          # torna admin
+python -m app.scripts.promote_admin email@exemplo.com --revoke # remove
+```
+
 ## Recuperação de senha
 
 O usuário pode redefinir a própria senha em caso de esquecimento, a partir
