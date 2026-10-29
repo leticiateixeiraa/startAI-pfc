@@ -13,7 +13,7 @@ function TermsPage() {
       <article className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-9">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Termo de Uso</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Última atualização: [25/09/2025] — Versão 1.0
+          Última atualização: 29/10/2026 — Versão 1.0
         </p>
 
         <div className="mt-8 flex flex-col gap-6 text-sm leading-relaxed text-card-foreground">
