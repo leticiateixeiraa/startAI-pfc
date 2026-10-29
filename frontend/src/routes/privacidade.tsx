@@ -59,7 +59,7 @@ function PrivacyPage() {
       <article className="mx-auto max-w-2xl rounded-2xl border border-border bg-card p-7 shadow-sm sm:p-9">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Política de Privacidade</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Última atualização: [25/09/2025] — Versão 1.0
+          Última atualização: 29/10/2026 — Versão 1.0
         </p>
         <p className="mt-4 text-sm leading-relaxed text-card-foreground">
           Esta Política descreve como o StartAI coleta, usa, armazena e protege os dados
@@ -184,8 +184,15 @@ function PrivacyPage() {
               Senhas são armazenadas exclusivamente como hash (bcrypt), a autenticação usa token
               JWT com expiração, a comunicação é criptografada (HTTPS/TLS) e mantemos logs de
               auditoria para rastreabilidade de acessos e ações sensíveis. Em caso de incidente
-              de segurança relevante, notificaremos os usuários afetados e a ANPD, conforme a
-              LGPD.
+              de segurança relevante, notificaremos os usuários afetados e a ANPD, conforme a LGPD.
+            </p>
+            <p className="mt-2">
+              <strong>Acesso pela equipe administradora:</strong> administradores do StartAI
+              têm acesso aos dados cadastrais (nome, e-mail e data de cadastro), à quantidade
+              de entrevistas de cada conta e aos registros de auditoria, com a finalidade de
+              garantir a segurança da plataforma e atender às solicitações dos titulares. Os
+              administradores não têm acesso ao conteúdo das respostas das entrevistas, e cada
+              consulta que realizam à auditoria fica registrada.
             </p>
           </section>
 
