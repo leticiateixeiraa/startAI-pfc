@@ -17,6 +17,9 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminAuditRouteImport } from './routes/admin/audit'
+import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as InterviewQuestionsRouteImport } from './routes/interview/questions'
 import { Route as InterviewSetupRouteImport } from './routes/interview/setup'
 
@@ -60,6 +63,21 @@ const TermosRoute = TermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/admin/',
+  path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/admin/audit',
+  path: '/admin/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminUsersRoute = AdminUsersRouteImport.update({
+  id: '/admin/users',
+  path: '/admin/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InterviewQuestionsRoute = InterviewQuestionsRouteImport.update({
   id: '/interview/questions',
   path: '/interview/questions',
@@ -80,8 +98,11 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
   '/interview/setup': typeof InterviewSetupRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -92,8 +113,11 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
   '/interview/setup': typeof InterviewSetupRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -105,8 +129,11 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
   '/interview/setup': typeof InterviewSetupRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -119,8 +146,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/termos'
+    | '/admin/audit'
+    | '/admin/users'
     | '/interview/questions'
     | '/interview/setup'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -131,8 +161,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/termos'
+    | '/admin/audit'
+    | '/admin/users'
     | '/interview/questions'
     | '/interview/setup'
+    | '/admin'
   id:
     | '__root__'
     | '/'
@@ -143,8 +176,11 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/termos'
+    | '/admin/audit'
+    | '/admin/users'
     | '/interview/questions'
     | '/interview/setup'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -156,8 +192,11 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermosRoute: typeof TermosRoute
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminUsersRoute: typeof AdminUsersRoute
   InterviewQuestionsRoute: typeof InterviewQuestionsRoute
   InterviewSetupRoute: typeof InterviewSetupRoute
+  AdminIndexRoute: typeof AdminIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -218,6 +257,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/admin'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/admin/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/users': {
+      id: '/admin/users'
+      path: '/admin/users'
+      fullPath: '/admin/users'
+      preLoaderRoute: typeof AdminUsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/interview/questions': {
       id: '/interview/questions'
       path: '/interview/questions'
@@ -244,8 +304,11 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermosRoute: TermosRoute,
+  AdminAuditRoute: AdminAuditRoute,
+  AdminUsersRoute: AdminUsersRoute,
   InterviewQuestionsRoute: InterviewQuestionsRoute,
   InterviewSetupRoute: InterviewSetupRoute,
+  AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

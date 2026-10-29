@@ -68,6 +68,7 @@ def register(user_in: UserCreate, request: Request, db: Session = Depends(get_db
         "user",
         str(user.id),
         {"terms_version": user_in.terms_version},
+        ip_address=_client_ip(request),
     )
     db.commit()
     return user
@@ -92,6 +93,23 @@ def login(credentials: UserLogin, request: Request, db: Session = Depends(get_db
         )
         db.commit()
         raise HTTPException(status_code=401, detail="E-mail ou senha inválidos")
+
+    if not user.is_active:
+        # feat(admin): a conta foi desativada por um administrador. A checagem
+        # vem depois da senha para não revelar a situação da conta a terceiros.
+        record_event(
+            db,
+            "auth.login_blocked",
+            user.id,
+            "user",
+            str(user.id),
+            ip_address=_client_ip(request),
+        )
+        db.commit()
+        raise HTTPException(
+            status_code=403,
+            detail="Esta conta está desativada. Entre em contato com o suporte.",
+        )
 
     access_token = criar_token_acesso(id_usuario=str(user.id))
     record_event(db, "auth.login", user.id, "user", str(user.id), ip_address=_client_ip(request))
