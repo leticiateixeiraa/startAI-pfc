@@ -85,10 +85,14 @@ def perguntas_geradas(prefixo: str = "Pergunta") -> list[str]:
     return [f"{prefixo} {numero} sobre a vaga?" for numero in range(1, 6)]
 
 
-def montar_roadmap(titulo: str = "Plano de estudos", etapas: int = 3) -> dict:
+def montar_roadmap(
+    titulo: str = "Plano de estudos",
+    etapas: int = 3,
+    objetivo: str = "Melhorar respostas comportamentais",
+) -> dict:
     return {
         "title": titulo,
-        "objective": "Melhorar respostas comportamentais",
+        "objective": objetivo,
         "items": [
             {"title": f"Etapa {numero}", "description": f"Descrição da etapa {numero}"}
             for numero in range(1, etapas + 1)

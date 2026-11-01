@@ -105,12 +105,25 @@ def test_fluxo_completo_ate_finalizar():
     with TestClient(app) as client:
         headers = _criar_usuario_autenticado(client, "gabriel_fluxo")
 
+        categorias = client.get("/questions/categories")
+        assert categorias.status_code == 200
+        assert {categoria["id"] for categoria in categorias.json()} == {
+            "entrevista_de_emprego",
+            "apresentacao_academica",
+        }
+
         start = client.post(
             "/interviews/mock-start",
             json={"category": "apresentacao_academica"},
             headers=headers,
         )
         session_id = start.json()["session_id"]
+
+        historico = client.get("/interviews/history", headers=headers)
+        assert historico.status_code == 200
+        sessao = next(item for item in historico.json() if item["session_id"] == session_id)
+        assert sessao["category"] == "apresentacao_academica"
+        assert sessao["answered_count"] == 0
 
         # Respostas neutras (sem palavras-chave, com bastante conteúdo) pra
         # percorrer o roteiro fixo sem disparar adaptação, até finalizar.

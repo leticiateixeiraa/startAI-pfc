@@ -163,6 +163,15 @@ def test_listar_auditoria_filtrando_por_usuario_deve_retornar_200_e_registrar_o_
     assert acesso.count() == 1
     assert aluno["id"] in acesso.one().details
 
+    filtrados = api.get(
+        "/admin/audit/logs",
+        params={"user_id": aluno["id"], "action": "auth.registered", "limit": 1},
+        headers=headers_admin,
+    )
+    assert filtrados.status_code == 200
+    assert len(filtrados.json()) == 1
+    assert filtrados.json()[0]["action"] == "auth.registered"
+
 
 def test_listar_auditoria_com_data_inicial_depois_da_final_deve_retornar_400(api):
     # Arrange
