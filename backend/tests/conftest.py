@@ -29,6 +29,7 @@ os.environ["JWT_SECRET_KEY"] = "chave-exclusiva-dos-testes-automatizados"
 
 import pytest  # noqa: E402
 from sqlalchemy import DateTime, create_engine, event, inspect  # noqa: E402
+from sqlalchemy.dialects.sqlite.base import DATETIME as SQLITE_DATETIME  # noqa: E402
 from sqlalchemy.orm.attributes import set_committed_value  # noqa: E402
 from sqlalchemy.pool import StaticPool  # noqa: E402
 
@@ -64,6 +65,34 @@ def _devolver_datas_com_fuso(registro, *_):
 
 event.listen(base.Base, "load", _devolver_datas_com_fuso, propagate=True)
 event.listen(base.Base, "refresh", _devolver_datas_com_fuso, propagate=True)
+
+
+# O listener acima só cobre objetos carregados inteiros (db.query(Model)).
+# Consultas que pedem só a coluna (db.query(Model.created_at)), como as
+# métricas do painel administrativo, recebem a data direto do driver e
+# continuavam sem fuso. Em uma máquina com fuso de Brasília, depois das 21h
+# (quando em UTC já é o dia seguinte), isso jogava a entrevista para o dia
+# errado e fazia o teste de métricas falhar só no banco de teste. Aqui o
+# próprio tipo DATETIME do SQLite passa a devolver as colunas
+# `DateTime(timezone=True)` com UTC, igual ao PostgreSQL.
+_processador_original = SQLITE_DATETIME.result_processor
+
+
+def _processador_com_fuso(self, dialect, coltype):
+    processar = _processador_original(self, dialect, coltype)
+    if not self.timezone:
+        return processar
+
+    def _processar(valor):
+        valor = processar(valor) if processar else valor
+        if isinstance(valor, datetime) and valor.tzinfo is None:
+            return valor.replace(tzinfo=timezone.utc)
+        return valor
+
+    return _processar
+
+
+SQLITE_DATETIME.result_processor = _processador_com_fuso
 
 # Troca o banco usado pela aplicação inteira. Como isso acontece antes de
 # `app.main` ser importado, o `from app.models.base import engine` de lá já
