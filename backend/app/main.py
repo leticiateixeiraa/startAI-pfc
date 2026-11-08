@@ -82,6 +82,7 @@ def on_startup():
     novas_colunas = {
         "interview_sessions": {
             "seniority": "VARCHAR(20)",
+            "job_title": "VARCHAR(160)",
         },
         "interview_evaluations": {
             "highlights": "TEXT NOT NULL DEFAULT '[]'",

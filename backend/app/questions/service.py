@@ -53,6 +53,7 @@ def start_interview(
         category=category,
         presentation_type=presentation_type,
         seniority=seniority,
+        job_title=job_title.strip()[:160],
         current_index=0,
         current_question_text=questions[0],
         finished=False,
