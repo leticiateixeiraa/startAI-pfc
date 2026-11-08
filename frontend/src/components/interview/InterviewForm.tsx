@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { PRESENTATION_TYPES } from "@/types/interview";
+import { PRESENTATION_TYPES, SENIORITY_LEVELS } from "@/types/interview";
 
 export type InterviewFormValues = {
   jobTitle: string;
+  seniority: string;
   presentationType: string;
   jobDescription: string;
 };
@@ -10,10 +11,13 @@ export type InterviewFormValues = {
 type InterviewFormProps = {
   isSubmitting: boolean;
   onSubmit: (values: InterviewFormValues) => void;
+  // Cargo já preenchido (ex.: sugerido pelo questionário de área).
+  initialJobTitle?: string;
 };
 
-export function InterviewForm({ isSubmitting, onSubmit }: InterviewFormProps) {
-  const [jobTitle, setJobTitle] = useState("");
+export function InterviewForm({ isSubmitting, onSubmit, initialJobTitle = "" }: InterviewFormProps) {
+  const [jobTitle, setJobTitle] = useState(initialJobTitle);
+  const [seniority, setSeniority] = useState("");
   const [presentationType, setPresentationType] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
@@ -26,6 +30,10 @@ export function InterviewForm({ isSubmitting, onSubmit }: InterviewFormProps) {
       setValidationMessage("Informe o cargo da vaga.");
       return;
     }
+    if (!seniority) {
+      setValidationMessage("Selecione o nível da vaga.");
+      return;
+    }
     if (!presentationType) {
       setValidationMessage("Selecione o tipo de entrevista.");
       return;
@@ -35,7 +43,7 @@ export function InterviewForm({ isSubmitting, onSubmit }: InterviewFormProps) {
       return;
     }
     setValidationMessage(null);
-    onSubmit({ jobTitle: jobTitle.trim(), presentationType, jobDescription: jobDescription.trim() });
+    onSubmit({ jobTitle: jobTitle.trim(), seniority, presentationType, jobDescription: jobDescription.trim() });
   }
 
   return (
@@ -57,6 +65,40 @@ export function InterviewForm({ isSubmitting, onSubmit }: InterviewFormProps) {
           className="rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20"
         />
       </div>
+
+      {/* Nível da vaga: a IA ajusta a dificuldade das perguntas e o rigor da avaliação. */}
+      <fieldset className="flex flex-col gap-1.5">
+        <legend className="mb-1.5 text-sm font-medium text-card-foreground">Nível da vaga</legend>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {SENIORITY_LEVELS.map((level) => {
+            const checked = seniority === level.value;
+            return (
+              <label
+                key={level.value}
+                className={`flex cursor-pointer items-center justify-center rounded-lg border px-3 py-2.5 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/20 ${
+                  checked
+                    ? "border-primary bg-primary/10 font-semibold text-foreground"
+                    : "border-input bg-background text-foreground hover:border-primary/40"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="seniority"
+                  value={level.value}
+                  checked={checked}
+                  onChange={() => setSeniority(level.value)}
+                  className="sr-only"
+                />
+                {level.label}
+              </label>
+            );
+          })}
+        </div>
+        <span className="text-xs text-muted-foreground">
+          {SENIORITY_LEVELS.find((level) => level.value === seniority)?.description ??
+            "A dificuldade das perguntas e o rigor da avaliação seguem o nível escolhido."}
+        </span>
+      </fieldset>
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="presentation-type" className="text-sm font-medium text-card-foreground">

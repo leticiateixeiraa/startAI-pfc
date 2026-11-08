@@ -12,9 +12,12 @@ from app.auth.router import router as auth_router
 from app.interview.router import router as interview_router
 from app.questions.router import router as questions_router
 from app.audit.router import router as audit_router
+from app.roadmap.router import interview_router as roadmap_interview_router
 from app.roadmap.router import router as roadmap_router
 from app.admin.router import router as admin_router
 from app.evaluation.router import router as evaluation_router
+from app.behavioral.router import router as behavioral_router
+from app.onboarding.router import router as onboarding_router
 
 
 app = FastAPI(title="StartAI API")
@@ -34,8 +37,11 @@ app.include_router(interview_router)
 app.include_router(questions_router)
 app.include_router(audit_router)
 app.include_router(roadmap_router)
+app.include_router(roadmap_interview_router)
 app.include_router(admin_router)
 app.include_router(evaluation_router)
+app.include_router(behavioral_router)
+app.include_router(onboarding_router)
 
 
 @app.on_event("startup")
@@ -71,6 +77,42 @@ def on_startup():
             connection.execute(
                 text("ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE")
             )
+
+    # feat(feedback): compatibilidade com avaliações gravadas antes dos erros
+    # apontados, da resposta sugerida e dos destaques gerais, e com sessões
+    # criadas antes do nível da vaga.
+    novas_colunas = {
+        "interview_sessions": {
+            "seniority": "VARCHAR(20)",
+            "job_title": "VARCHAR(160)",
+        },
+        "interview_evaluations": {
+            "highlights": "TEXT NOT NULL DEFAULT '[]'",
+            "next_steps": "TEXT NOT NULL DEFAULT '[]'",
+        },
+        "answer_evaluations": {
+            "mistakes": "TEXT NOT NULL DEFAULT '[]'",
+            "suggested_answer": "TEXT",
+        },
+        # feat(roadmap-ia): trilha gerada a partir da avaliação da entrevista.
+        "learning_roadmaps": {
+            "session_id": "UUID UNIQUE REFERENCES interview_sessions(id)",
+            "summary": "TEXT",
+        },
+        "learning_roadmap_items": {
+            "focus": "TEXT",
+            "estimated_time": "VARCHAR(60)",
+            "practice": "TEXT",
+            "tips": "TEXT NOT NULL DEFAULT '[]'",
+            "resources": "TEXT NOT NULL DEFAULT '[]'",
+        },
+    }
+    with engine.begin() as connection:
+        for tabela, colunas in novas_colunas.items():
+            existentes = {column["name"] for column in inspect(engine).get_columns(tabela)}
+            for coluna, definicao in colunas.items():
+                if coluna not in existentes:
+                    connection.execute(text(f"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}"))
 
 
 @app.get("/health")

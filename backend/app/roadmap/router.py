@@ -1,24 +1,25 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.audit.service import record_event
 from app.auth.dependencies import get_current_user
+from app.interview.models import InterviewSession
 from app.models.base import get_db
+from app.questions.llm_service import LLMGenerationError
+from app.roadmap import service
 from app.roadmap.models import LearningRoadmap, LearningRoadmapItem
 from app.roadmap.schemas import RoadmapCreate, RoadmapItemStatusIn, RoadmapOut
 
 router = APIRouter(prefix="/roadmaps", tags=["roadmaps"])
+# feat(roadmap-ia): trilha gerada a partir da avaliação de uma entrevista.
+interview_router = APIRouter(prefix="/interviews", tags=["roadmaps"])
 
 
 def _to_response(db: Session, roadmap: LearningRoadmap) -> RoadmapOut:
-    items = db.query(LearningRoadmapItem).filter(
-        LearningRoadmapItem.roadmap_id == roadmap.id
-    ).order_by(LearningRoadmapItem.order_index).all()
-    return RoadmapOut.model_validate({"id": roadmap.id, "title": roadmap.title,
-        "objective": roadmap.objective, "created_at": roadmap.created_at,
-        "updated_at": roadmap.updated_at, "items": items})
+    return RoadmapOut.model_validate(service.montar_roadmap(db, roadmap))
 
 
 @router.post("", response_model=RoadmapOut, status_code=status.HTTP_201_CREATED)
@@ -66,4 +67,66 @@ def update_item_status(
     record_event(db, "roadmap.item_updated", uuid.UUID(user_id), "roadmap_item", str(item.id), {"status": payload.status})
     db.commit()
     db.refresh(roadmap)
+    return _to_response(db, roadmap)
+
+
+def _sessao_do_usuario(db: Session, session_id: uuid.UUID, user_id: str) -> InterviewSession:
+    session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessão de entrevista não encontrada")
+    if str(session.user_id) != user_id:
+        raise HTTPException(status_code=403, detail="Essa sessão não pertence ao usuário autenticado")
+    return session
+
+
+@interview_router.get("/{session_id}/roadmap", response_model=RoadmapOut)
+def consultar_trilha(
+    session_id: uuid.UUID,
+    user_id: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    session = _sessao_do_usuario(db, session_id, user_id)
+    roadmap = service.buscar_por_sessao(db, session.id)
+    if not roadmap:
+        raise HTTPException(status_code=404, detail="Essa entrevista ainda não tem trilha de estudos")
+    return _to_response(db, roadmap)
+
+
+@interview_router.post("/{session_id}/roadmap", response_model=RoadmapOut)
+def gerar_trilha(
+    session_id: uuid.UUID,
+    request: Request,
+    response: Response,
+    user_id: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    session = _sessao_do_usuario(db, session_id, user_id)
+    try:
+        roadmap, criada = service.gerar_trilha_da_entrevista(db, session)
+    except service.TrilhaIndisponivel as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    except LLMGenerationError as error:
+        db.rollback()
+        raise HTTPException(status_code=502, detail=str(error)) from error
+
+    if criada:
+        response.status_code = status.HTTP_201_CREATED
+        record_event(
+            db,
+            "roadmap.generated",
+            uuid.UUID(user_id),
+            "roadmap",
+            str(roadmap.id),
+            {"session_id": str(session.id)},
+            ip_address=request.client.host if request.client else None,
+        )
+        try:
+            db.commit()
+        except IntegrityError:
+            # Duas requisições ao mesmo tempo: fica a que gravou primeiro.
+            db.rollback()
+            roadmap = service.buscar_por_sessao(db, session.id)
+            response.status_code = status.HTTP_200_OK
+        else:
+            db.refresh(roadmap)
     return _to_response(db, roadmap)

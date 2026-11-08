@@ -62,7 +62,7 @@ def test_deve_devolver_avaliacao_validada_na_ordem_das_respostas(monkeypatch):
     # O modelo devolveu fora de ordem; a função casa pelo "index".
     _gemini_respondendo(monkeypatch, {"summary": " Boa entrevista. ", "answers": [_item(2), _item(1)]})
 
-    resultado = avaliar_respostas(ENTREVISTA, "comportamental")
+    resultado = avaliar_respostas(ENTREVISTA, "mista")
 
     assert resultado["summary"] == "Boa entrevista."
     assert [item["feedback"] for item in resultado["answers"]] == [
@@ -140,3 +140,94 @@ def test_deve_recusar_avaliacao_sem_chave_do_gemini():
 def test_deve_recusar_entrevista_sem_respostas():
     with pytest.raises(ValueError):
         avaliar_respostas([])
+
+
+# --- Erros apontados, resposta sugerida e destaques gerais --------------------
+
+
+def test_deve_devolver_erros_resposta_sugerida_destaques_e_proximos_passos(monkeypatch):
+    _gemini_respondendo(
+        monkeypatch,
+        {
+            "summary": "Ok",
+            "highlights": ["Boa postura", " "],
+            "next_steps": ["Treinar o método STAR"],
+            "answers": [
+                _item(1, mistakes=['"Python é compilado": Python é interpretado.'], suggested_answer=" Eu... "),
+                _item(2),
+            ],
+        },
+    )
+
+    resultado = avaliar_respostas(ENTREVISTA, "tecnica")
+
+    assert resultado["highlights"] == ["Boa postura"]
+    assert resultado["next_steps"] == ["Treinar o método STAR"]
+    assert resultado["answers"][0]["mistakes"] == ['"Python é compilado": Python é interpretado.']
+    assert resultado["answers"][0]["suggested_answer"] == "Eu..."
+    # Avaliação sem os campos novos continua válida, com valores vazios.
+    assert resultado["answers"][1]["mistakes"] == []
+    assert resultado["answers"][1]["suggested_answer"] is None
+    assert resultado["behavioral_profile"] is None
+
+
+def test_prompt_deve_pedir_erros_concretos_sem_inventar(monkeypatch):
+    cliente = _gemini_respondendo(monkeypatch, {"summary": "Ok", "answers": [_item(1), _item(2)]})
+
+    avaliar_respostas(ENTREVISTA, "tecnica")
+
+    prompt = cliente.models.generate_content.call_args.kwargs["contents"]
+    assert "mistakes" in prompt
+    assert "não invente erros" in prompt
+    assert "suggested_answer" in prompt
+    assert "behavioral_profile" not in prompt  # só na entrevista comportamental
+
+
+# --- Perfil comportamental -----------------------------------------------------
+
+PERFIL = {
+    "competencies": {
+        "comunicacao": 7,
+        "trabalho_em_equipe": 9,
+        "lideranca": 5,
+        "resolucao_de_problemas": 8,
+        "adaptabilidade": 6.4,
+        "inteligencia_emocional": 12,
+    },
+    "star": {"situation": 8, "task": 6, "action": 9, "result": 3},
+    "description": " Você é colaborativo. ",
+}
+
+
+def test_entrevista_comportamental_deve_devolver_perfil_validado(monkeypatch):
+    cliente = _gemini_respondendo(
+        monkeypatch, {"summary": "Ok", "answers": [_item(1), _item(2)], "behavioral_profile": PERFIL}
+    )
+
+    perfil = avaliar_respostas(ENTREVISTA, "comportamental")["behavioral_profile"]
+
+    assert perfil["competencies"]["adaptabilidade"] == 6
+    assert perfil["competencies"]["inteligencia_emocional"] == 10
+    assert perfil["star"] == {"situation": 8, "task": 6, "action": 9, "result": 3}
+    assert perfil["description"] == "Você é colaborativo."
+    prompt = cliente.models.generate_content.call_args.kwargs["contents"]
+    assert "behavioral_profile" in prompt
+    assert "trabalho_em_equipe" in prompt
+
+
+@pytest.mark.parametrize(
+    "perfil, mensagem",
+    [
+        (None, "não retornou o perfil"),
+        ({**PERFIL, "star": "alto"}, "formato inválido"),
+        ({**PERFIL, "description": ""}, "não descreveu"),
+        ({**PERFIL, "competencies": {**PERFIL["competencies"], "lideranca": "boa"}}, "não é número"),
+    ],
+)
+def test_entrevista_comportamental_sem_perfil_valido_deve_falhar(monkeypatch, perfil, mensagem):
+    _gemini_respondendo(
+        monkeypatch, {"summary": "Ok", "answers": [_item(1), _item(2)], "behavioral_profile": perfil}
+    )
+
+    with pytest.raises(LLMGenerationError, match=mensagem):
+        avaliar_respostas(ENTREVISTA, "comportamental")
