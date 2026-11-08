@@ -1,6 +1,7 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getCurrentUser, type CurrentUser } from "../services/authService";
+import { getOnboardingStatus } from "../services/onboardingApi";
 import {
   listInterviewHistory,
   type InterviewHistoryItem,
@@ -31,6 +32,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 function HomePage() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [interviews, setInterviews] = useState<InterviewHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,7 +55,17 @@ function HomePage() {
     }
 
     void loadHome();
-  }, []);
+
+    // feat(onboarding): no primeiro acesso, leva ao questionário de área.
+    // Quem já respondeu ou pulou não é redirecionado de novo.
+    getOnboardingStatus()
+      .then((onboarding) => {
+        if (onboarding.status === "pending") navigate({ to: "/onboarding", replace: true });
+      })
+      .catch(() => {
+        // sem o status, o aluno continua no início normalmente
+      });
+  }, [navigate]);
 
   const firstName = user?.name?.trim().split(" ")[0] || "estudante";
 

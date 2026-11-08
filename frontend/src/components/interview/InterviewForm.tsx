@@ -10,10 +10,12 @@ export type InterviewFormValues = {
 type InterviewFormProps = {
   isSubmitting: boolean;
   onSubmit: (values: InterviewFormValues) => void;
+  // Cargo já preenchido (ex.: sugerido pelo questionário de área).
+  initialJobTitle?: string;
 };
 
-export function InterviewForm({ isSubmitting, onSubmit }: InterviewFormProps) {
-  const [jobTitle, setJobTitle] = useState("");
+export function InterviewForm({ isSubmitting, onSubmit, initialJobTitle = "" }: InterviewFormProps) {
+  const [jobTitle, setJobTitle] = useState(initialJobTitle);
   const [presentationType, setPresentationType] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [validationMessage, setValidationMessage] = useState<string | null>(null);
