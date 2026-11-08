@@ -139,7 +139,11 @@ def total_questions(db: Session, session: InterviewSession) -> int:
 
 
 def register_answer_and_get_next(
-    db: Session, session: InterviewSession, answer_text: str
+    db: Session,
+    session: InterviewSession,
+    answer_text: str,
+    input_mode: str = "text",
+    audio_duration_seconds: float | None = None,
 ) -> tuple[str | None, bool, bool]:
     """Persiste a resposta à pergunta pendente e decide a próxima pergunta.
 
@@ -157,6 +161,8 @@ def register_answer_and_get_next(
             order_index=session.current_index,
             question_text=current_question,
             answer_text=answer_text,
+            input_mode=input_mode,
+            audio_duration_seconds=audio_duration_seconds,
         )
     )
 

@@ -1,7 +1,8 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class StartInterviewIn(BaseModel):
@@ -17,6 +18,9 @@ class StartInterviewOut(BaseModel):
 
 class AnswerIn(BaseModel):
     answer_text: str
+    # feat(speech): resposta falada. Omitidos = resposta digitada (compatível).
+    input_mode: Literal["text", "voice"] = "text"
+    audio_duration_seconds: float | None = Field(default=None, gt=0, le=300)
 
 
 class NextQuestionOut(BaseModel):

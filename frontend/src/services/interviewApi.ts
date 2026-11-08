@@ -78,14 +78,30 @@ async function createInterviewReal(
   };
 }
 
+export type VoiceAnswerMeta = {
+  durationSeconds: number;
+};
+
+export type TranscriptionResponse = {
+  transcript: string;
+  duration_seconds: number | null;
+  word_count: number;
+};
+
 export async function submitAnswer(
   sessionId: string,
   answerText: string,
+  voice?: VoiceAnswerMeta,
 ): Promise<AnswerResponse> {
   const response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/answer`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ answer_text: answerText }),
+    body: JSON.stringify({
+      answer_text: answerText,
+      ...(voice
+        ? { input_mode: "voice", audio_duration_seconds: voice.durationSeconds }
+        : { input_mode: "text" }),
+    }),
   });
 
   if (response.status === 401) {
@@ -100,6 +116,42 @@ export async function submitAnswer(
   }
 
   return (await response.json()) as AnswerResponse;
+}
+
+// Envia o áudio (WAV) e recebe o texto transcrito para o usuário revisar.
+export async function transcribeAudio(
+  sessionId: string,
+  audio: Blob,
+  durationSeconds: number,
+): Promise<TranscriptionResponse> {
+  const form = new FormData();
+  form.append("audio", audio, "resposta.wav");
+  form.append("duration_seconds", String(durationSeconds));
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/interviews/${sessionId}/transcribe`, {
+      method: "POST",
+      // Sem Content-Type: o navegador define o multipart com o boundary certo.
+      headers: { Authorization: `Bearer ${localStorage.getItem("access_token") ?? ""}` },
+      body: form,
+    });
+  } catch {
+    throw new ApiError("Não foi possível conectar ao servidor. Verifique sua conexão.");
+  }
+
+  if (response.status === 401) {
+    localStorage.removeItem("access_token");
+    window.location.assign("/");
+    throw new ApiError("Sua sessão expirou. Faça login novamente.", 401);
+  }
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { detail?: string };
+    throw new ApiError(body.detail ?? "Não foi possível transcrever o áudio.", response.status);
+  }
+
+  return (await response.json()) as TranscriptionResponse;
 }
 
 // feat(interview-resume): estado salvo da entrevista, para continuar de onde parou.

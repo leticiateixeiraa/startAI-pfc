@@ -133,7 +133,11 @@ def answer(
         raise HTTPException(status_code=400, detail="Essa sessão de entrevista já foi finalizada")
 
     next_question, adapted, finished = service.register_answer_and_get_next(
-        db, session, payload.answer_text
+        db,
+        session,
+        payload.answer_text,
+        payload.input_mode,
+        payload.audio_duration_seconds,
     )
     record_event(
         db,
@@ -141,7 +145,7 @@ def answer(
         uuid.UUID(user_id),
         "interview_session",
         str(session.id),
-        {"adapted": adapted, "finished": finished},
+        {"adapted": adapted, "finished": finished, "input_mode": payload.input_mode},
         ip_address=request.client.host if request.client else None,
     )
     db.commit()
