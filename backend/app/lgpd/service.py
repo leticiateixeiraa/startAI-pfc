@@ -7,7 +7,8 @@ Usado em dois lugares, com a MESMA regra:
 
 RN01 - São APAGADOS do banco: cadastro, entrevistas (sessões, perguntas e
        respostas), avaliações da IA, perfis comportamentais, questionário de
-       primeiro acesso, trilhas de estudo e tokens de redefinição de senha.
+       primeiro acesso, trilhas de estudo, vagas recomendadas e tokens de
+       redefinição de senha.
 RN02 - Os registros de AUDITORIA não são apagados, e sim ANONIMIZADOS: o
        vínculo com a pessoa (user_id) e o endereço IP são removidos, mas o
        fato "aconteceu um login / uma entrevista" continua registrado. A
@@ -32,6 +33,7 @@ from app.auth.schemas import ROLE_ADMIN
 from app.behavioral.models import BehavioralProfile
 from app.evaluation.models import AnswerEvaluation, InterviewEvaluation
 from app.interview.models import InterviewAnswer, InterviewQuestion, InterviewSession
+from app.jobs.models import JobRecommendation
 from app.onboarding.models import CareerOnboarding
 from app.roadmap.models import LearningRoadmap, LearningRoadmapItem
 
@@ -97,6 +99,9 @@ def excluir_conta(db: Session, user: User) -> dict:
         ),
         "career_onboarding": apagar(
             db.query(CareerOnboarding).filter(CareerOnboarding.user_id == user.id)
+        ),
+        "job_recommendations": apagar(
+            db.query(JobRecommendation).filter(JobRecommendation.user_id == user.id)
         ),
         "password_reset_tokens": apagar(
             db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id)
