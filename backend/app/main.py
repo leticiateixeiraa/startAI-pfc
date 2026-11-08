@@ -15,6 +15,7 @@ from app.audit.router import router as audit_router
 from app.roadmap.router import router as roadmap_router
 from app.admin.router import router as admin_router
 from app.evaluation.router import router as evaluation_router
+from app.onboarding.router import router as onboarding_router
 
 
 app = FastAPI(title="StartAI API")
@@ -36,6 +37,7 @@ app.include_router(audit_router)
 app.include_router(roadmap_router)
 app.include_router(admin_router)
 app.include_router(evaluation_router)
+app.include_router(onboarding_router)
 
 
 @app.on_event("startup")
