@@ -6,8 +6,8 @@ Usado em dois lugares, com a MESMA regra:
 - DELETE /admin/users/{id}  -> o administrador atende um pedido de exclusão
 
 RN01 - São APAGADOS do banco: cadastro, entrevistas (sessões, perguntas e
-       respostas), avaliações da IA, trilhas de estudo e tokens de
-       redefinição de senha.
+       respostas), avaliações da IA, perfis comportamentais, questionário de
+       primeiro acesso, trilhas de estudo e tokens de redefinição de senha.
 RN02 - Os registros de AUDITORIA não são apagados, e sim ANONIMIZADOS: o
        vínculo com a pessoa (user_id) e o endereço IP são removidos, mas o
        fato "aconteceu um login / uma entrevista" continua registrado. A
@@ -29,8 +29,10 @@ from sqlalchemy.orm import Session
 from app.audit.models import AuditLog
 from app.auth.models import PasswordResetToken, User
 from app.auth.schemas import ROLE_ADMIN
+from app.behavioral.models import BehavioralProfile
 from app.evaluation.models import AnswerEvaluation, InterviewEvaluation
 from app.interview.models import InterviewAnswer, InterviewQuestion, InterviewSession
+from app.onboarding.models import CareerOnboarding
 from app.roadmap.models import LearningRoadmap, LearningRoadmapItem
 
 
@@ -69,12 +71,21 @@ def excluir_conta(db: Session, user: User) -> dict:
         return consulta.delete(synchronize_session=False)
 
     resumo = {
+        "behavioral_profiles": apagar(
+            db.query(BehavioralProfile).filter(BehavioralProfile.user_id == user.id)
+        ),
         "answer_evaluations": apagar(
             db.query(AnswerEvaluation).filter(AnswerEvaluation.evaluation_id.in_(avaliacoes))
         ),
         "interview_evaluations": apagar(
             db.query(InterviewEvaluation).filter(InterviewEvaluation.user_id == user.id)
         ),
+        # As trilhas vêm antes das sessões: a trilha gerada pela IA aponta
+        # para a entrevista de origem (session_id).
+        "roadmap_items": apagar(
+            db.query(LearningRoadmapItem).filter(LearningRoadmapItem.roadmap_id.in_(trilhas))
+        ),
+        "roadmaps": apagar(db.query(LearningRoadmap).filter(LearningRoadmap.user_id == user.id)),
         "interview_answers": apagar(
             db.query(InterviewAnswer).filter(InterviewAnswer.session_id.in_(sessoes))
         ),
@@ -84,10 +95,9 @@ def excluir_conta(db: Session, user: User) -> dict:
         "interview_sessions": apagar(
             db.query(InterviewSession).filter(InterviewSession.user_id == user.id)
         ),
-        "roadmap_items": apagar(
-            db.query(LearningRoadmapItem).filter(LearningRoadmapItem.roadmap_id.in_(trilhas))
+        "career_onboarding": apagar(
+            db.query(CareerOnboarding).filter(CareerOnboarding.user_id == user.id)
         ),
-        "roadmaps": apagar(db.query(LearningRoadmap).filter(LearningRoadmap.user_id == user.id)),
         "password_reset_tokens": apagar(
             db.query(PasswordResetToken).filter(PasswordResetToken.user_id == user.id)
         ),

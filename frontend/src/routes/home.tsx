@@ -1,11 +1,12 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { getCurrentUser, type CurrentUser } from "../services/authService";
+import { getOnboardingStatus } from "../services/onboardingApi";
 import {
   listInterviewHistory,
   type InterviewHistoryItem,
 } from "../services/interviewHistoryApi";
-import { presentationTypeLabel } from "../types/interview";
+import { presentationTypeLabel, seniorityLabel } from "../types/interview";
 
 export const Route = createFileRoute("/home")({
   beforeLoad: () => {
@@ -31,6 +32,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 function HomePage() {
+  const navigate = useNavigate();
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [interviews, setInterviews] = useState<InterviewHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,9 +55,21 @@ function HomePage() {
     }
 
     void loadHome();
-  }, []);
+
+    // feat(onboarding): no primeiro acesso, leva ao questionário de área.
+    // Quem já respondeu ou pulou não é redirecionado de novo.
+    getOnboardingStatus()
+      .then((onboarding) => {
+        if (onboarding.status === "pending") navigate({ to: "/onboarding", replace: true });
+      })
+      .catch(() => {
+        // sem o status, o aluno continua no início normalmente
+      });
+  }, [navigate]);
 
   const firstName = user?.name?.trim().split(" ")[0] || "estudante";
+  // feat(interview-resume): a entrevista em andamento mais recente (o histórico vem do mais novo).
+  const inProgress = interviews.find((interview) => !interview.finished);
 
   return (
     <main className="flex-1 bg-background">
@@ -81,6 +95,25 @@ function HomePage() {
       </section>
 
       <div className="mx-auto max-w-6xl px-4 pb-12 sm:px-8">
+        {inProgress && (
+          <section className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-highlight/40 bg-highlight/10 p-5">
+            <div>
+              <p className="text-sm font-bold text-foreground">Você tem uma entrevista em andamento</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {inProgress.job_title ?? "Entrevista simulada"} · {inProgress.answered_count}{" "}
+                {inProgress.answered_count === 1 ? "resposta salva" : "respostas salvas"}. Continue de onde parou.
+              </p>
+            </div>
+            <Link
+              to="/interview/questions"
+              search={{ session: inProgress.session_id }}
+              className="rounded-xl bg-highlight px-5 py-2.5 text-sm font-bold text-highlight-foreground hover:bg-highlight/90"
+            >
+              Continuar entrevista
+            </Link>
+          </section>
+        )}
+
         <section className="pt-10">
           <div className="flex items-end justify-between gap-4">
             <div>
@@ -139,7 +172,16 @@ function HomePage() {
                         {interview.presentation_type
                           ? presentationTypeLabel(interview.presentation_type)
                           : "Entrevista simulada"}
+                        {interview.seniority && (
+                          <span className="font-normal text-muted-foreground">
+                            {" "}
+                            · {seniorityLabel(interview.seniority)}
+                          </span>
+                        )}
                       </h3>
+                      {interview.job_title && (
+                        <p className="mt-0.5 text-sm text-muted-foreground">{interview.job_title}</p>
+                      )}
                     </div>
                     <span
                       className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
@@ -158,6 +200,17 @@ function HomePage() {
                     </time>
                   </div>
                   {/* feat(evaluation): nota da IA e acesso ao resultado da entrevista */}
+                  {!interview.finished && (
+                    <div className="mt-3 flex justify-end">
+                      <Link
+                        to="/interview/questions"
+                        search={{ session: interview.session_id }}
+                        className="text-sm font-semibold text-primary hover:underline"
+                      >
+                        Continuar entrevista
+                      </Link>
+                    </div>
+                  )}
                   {interview.finished && interview.answered_count > 0 && (
                     <div className="mt-3 flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">

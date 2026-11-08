@@ -129,6 +129,15 @@ def _adapt_next_question(category: str, previous_answer: str, next_index: int) -
     return _question_at(category, next_index), False
 
 
+def _generated_count(db: Session, session: InterviewSession) -> int:
+    return db.query(InterviewQuestion).filter(InterviewQuestion.session_id == session.id).count()
+
+
+def total_questions(db: Session, session: InterviewSession) -> int:
+    """Quantas perguntas a entrevista tem: as geradas pela IA ou as do banco fixo."""
+    return _generated_count(db, session) or len(QUESTION_BANK[_valid_category(session.category)])
+
+
 def register_answer_and_get_next(
     db: Session, session: InterviewSession, answer_text: str
 ) -> tuple[str | None, bool, bool]:
@@ -152,9 +161,7 @@ def register_answer_and_get_next(
     )
 
     category = _valid_category(session.category)
-    generated_count = db.query(InterviewQuestion).filter(
-        InterviewQuestion.session_id == session.id
-    ).count()
+    generated_count = _generated_count(db, session)
     max_questions = generated_count or len(QUESTION_BANK[category])
     next_index = session.current_index + 1
 
@@ -178,6 +185,7 @@ def register_answer_and_get_next(
                 answer_text,
                 previous_answers,
                 session.presentation_type,
+                session.seniority,
             )
             adapted = True
         except LLMGenerationError:

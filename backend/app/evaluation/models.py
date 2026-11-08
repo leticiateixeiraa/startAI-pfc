@@ -33,6 +33,10 @@ class InterviewEvaluation(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     overall_score = Column(Float, nullable=False)
     summary = Column(Text, nullable=False)
+    # Pontos positivos da entrevista inteira e prioridades para a próxima,
+    # em JSON (ver o comentário de `strengths` abaixo).
+    highlights = Column(Text, nullable=False, default="[]", server_default="[]")
+    next_steps = Column(Text, nullable=False, default="[]", server_default="[]")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
@@ -58,3 +62,7 @@ class AnswerEvaluation(Base):
     # auditoria: funciona no PostgreSQL e no SQLite dos testes.
     strengths = Column(Text, nullable=False, default="[]")
     improvements = Column(Text, nullable=False, default="[]")
+    # Erros concretos no que o aluno disse, citando o trecho e a correção.
+    mistakes = Column(Text, nullable=False, default="[]", server_default="[]")
+    # Exemplo de como a resposta ficaria melhor. Vazio em avaliações antigas.
+    suggested_answer = Column(Text, nullable=True)

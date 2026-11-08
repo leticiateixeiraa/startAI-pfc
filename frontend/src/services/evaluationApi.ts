@@ -17,14 +17,43 @@ export type AnswerEvaluation = {
   feedback: string;
   strengths: string[];
   improvements: string[];
+  // Erros concretos no que o aluno disse e um exemplo de resposta melhor.
+  // Avaliações antigas vêm com lista vazia e null.
+  mistakes: string[];
+  suggested_answer: string | null;
+};
+
+export type ScoreItem = {
+  key: string;
+  label: string;
+  score: number;
+};
+
+export type Archetype = {
+  key: string;
+  name: string;
+  description: string;
+};
+
+export type BehavioralProfile = {
+  archetype: Archetype;
+  description: string;
+  competencies: ScoreItem[];
+  star: ScoreItem[];
 };
 
 export type InterviewEvaluation = {
   session_id: string;
+  presentation_type: string | null;
+  seniority: string | null;
   overall_score: number;
   summary: string;
+  highlights: string[];
+  next_steps: string[];
   created_at: string | null;
   answers: AnswerEvaluation[];
+  // Só nas entrevistas comportamentais.
+  behavioral_profile: BehavioralProfile | null;
 };
 
 export const CRITERIA_LABELS: Record<keyof EvaluationCriteria, string> = {

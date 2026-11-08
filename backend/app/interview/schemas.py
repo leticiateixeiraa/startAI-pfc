@@ -31,10 +31,26 @@ class NextQuestionOut(BaseModel):
     adapted: bool
 
 
+class InterviewStateOut(BaseModel):
+    """Situação atual da entrevista, para o aluno retomar de onde parou."""
+
+    session_id: uuid.UUID
+    job_title: str | None
+    presentation_type: str | None
+    seniority: str | None
+    finished: bool
+    # Pergunta pendente de resposta (None quando finalizada).
+    current_question: str | None
+    answered_count: int
+    total_questions: int
+
+
 class InterviewHistoryOut(BaseModel):
     session_id: uuid.UUID
     category: str
+    job_title: str | None = None
     presentation_type: str | None
+    seniority: str | None = None
     finished: bool
     answered_count: int
     created_at: datetime

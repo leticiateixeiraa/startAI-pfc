@@ -8,12 +8,15 @@ RN03 - A nota de cada resposta é a média dos 4 critérios, e a nota geral é a
        média das notas das respostas, ambas com uma casa decimal. Quem
        calcula é o backend, não a IA.
 RN04 - Se o Gemini falhar, nada é gravado: o aluno pode tentar de novo.
+RN05 - Na entrevista comportamental, a avaliação também grava o perfil
+       comportamental (app/behavioral). Sem o perfil, nada é gravado.
 """
 import json
 import uuid
 
 from sqlalchemy.orm import Session
 
+from app.behavioral import service as perfil_service
 from app.evaluation.llm_avaliacao import CRITERIOS, avaliar_respostas
 from app.evaluation.models import AnswerEvaluation, InterviewEvaluation
 from app.interview.models import InterviewAnswer, InterviewSession
@@ -64,6 +67,7 @@ def gerar_avaliacao(db: Session, session: InterviewSession) -> tuple[InterviewEv
     resultado = avaliar_respostas(
         [(resposta.question_text, resposta.answer_text) for resposta in respostas],
         session.presentation_type,
+        session.seniority,
     )
 
     notas = [calcular_nota_resposta(item) for item in resultado["answers"]]
@@ -72,6 +76,8 @@ def gerar_avaliacao(db: Session, session: InterviewSession) -> tuple[InterviewEv
         user_id=session.user_id,
         overall_score=calcular_nota_geral(notas),
         summary=resultado["summary"],
+        highlights=json.dumps(resultado["highlights"], ensure_ascii=False),
+        next_steps=json.dumps(resultado["next_steps"], ensure_ascii=False),
     )
     db.add(avaliacao)
     db.flush()  # gera o id usado pelas avaliações de cada resposta
@@ -90,8 +96,13 @@ def gerar_avaliacao(db: Session, session: InterviewSession) -> tuple[InterviewEv
                 feedback=item["feedback"],
                 strengths=json.dumps(item["strengths"], ensure_ascii=False),
                 improvements=json.dumps(item["improvements"], ensure_ascii=False),
+                mistakes=json.dumps(item["mistakes"], ensure_ascii=False),
+                suggested_answer=item["suggested_answer"],
             )
         )
+
+    if resultado["behavioral_profile"]:
+        perfil_service.salvar_perfil(db, avaliacao, resultado["behavioral_profile"])
     return avaliacao, True
 
 
@@ -104,11 +115,18 @@ def montar_resposta(db: Session, avaliacao: InterviewEvaluation) -> dict:
         .order_by(AnswerEvaluation.order_index)
         .all()
     )
+    sessao = db.query(InterviewSession).filter(InterviewSession.id == avaliacao.session_id).first()
+    perfil = perfil_service.buscar_perfil(db, avaliacao.id)
     return {
         "session_id": avaliacao.session_id,
+        "presentation_type": sessao.presentation_type if sessao else None,
+        "seniority": sessao.seniority if sessao else None,
         "overall_score": avaliacao.overall_score,
         "summary": avaliacao.summary,
+        "highlights": json.loads(avaliacao.highlights or "[]"),
+        "next_steps": json.loads(avaliacao.next_steps or "[]"),
         "created_at": avaliacao.created_at,
+        "behavioral_profile": perfil_service.montar_perfil(perfil) if perfil else None,
         "answers": [
             {
                 "order_index": item.order_index,
@@ -119,6 +137,8 @@ def montar_resposta(db: Session, avaliacao: InterviewEvaluation) -> dict:
                 "feedback": item.feedback,
                 "strengths": json.loads(item.strengths or "[]"),
                 "improvements": json.loads(item.improvements or "[]"),
+                "mistakes": json.loads(item.mistakes or "[]"),
+                "suggested_answer": item.suggested_answer,
             }
             for item, resposta in itens
         ],
