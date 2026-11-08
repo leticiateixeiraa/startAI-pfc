@@ -3,6 +3,7 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorState } from "@/components/interview/ErrorState";
 import { CompetencyRadar, ScoreBars } from "@/components/profile/ProfileCharts";
+import { InterviewRoadmapSection } from "@/components/roadmap/InterviewRoadmapSection";
 import { getErrorMessage } from "@/services/api";
 import { seniorityLabel } from "@/types/interview";
 import {
@@ -270,6 +271,9 @@ function InterviewResultPage() {
               <div className="sm:border-l sm:border-border sm:pl-6">
                 <h2 className="text-base font-semibold text-card-foreground">Resumo geral</h2>
                 <p className="mt-1 text-sm leading-relaxed text-card-foreground">{evaluation.summary}</p>
+                <a href="#trilha" className="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
+                  Ver sua trilha de estudos ↓
+                </a>
               </div>
             </section>
 
@@ -288,6 +292,9 @@ function InterviewResultPage() {
                 <AnswerCard key={item.order_index} item={item} position={index + 1} />
               ))}
             </div>
+
+            {/* feat(roadmap-ia): só depois da avaliação, que é a base da trilha */}
+            <InterviewRoadmapSection sessionId={session} />
           </>
         )}
 
