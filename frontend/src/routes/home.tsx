@@ -6,7 +6,7 @@ import {
   listInterviewHistory,
   type InterviewHistoryItem,
 } from "../services/interviewHistoryApi";
-import { presentationTypeLabel } from "../types/interview";
+import { presentationTypeLabel, seniorityLabel } from "../types/interview";
 
 export const Route = createFileRoute("/home")({
   beforeLoad: () => {
@@ -151,6 +151,12 @@ function HomePage() {
                         {interview.presentation_type
                           ? presentationTypeLabel(interview.presentation_type)
                           : "Entrevista simulada"}
+                        {interview.seniority && (
+                          <span className="font-normal text-muted-foreground">
+                            {" "}
+                            · {seniorityLabel(interview.seniority)}
+                          </span>
+                        )}
                       </h3>
                     </div>
                     <span
