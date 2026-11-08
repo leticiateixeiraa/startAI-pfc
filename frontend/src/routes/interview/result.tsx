@@ -2,12 +2,16 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorState } from "@/components/interview/ErrorState";
+import { CompetencyRadar, ScoreBars } from "@/components/profile/ProfileCharts";
+import { InterviewRoadmapSection } from "@/components/roadmap/InterviewRoadmapSection";
 import { getErrorMessage } from "@/services/api";
+import { seniorityLabel } from "@/types/interview";
 import {
   CRITERIA_LABELS,
   loadEvaluation,
   scoreLabel,
   type AnswerEvaluation,
+  type BehavioralProfile,
   type EvaluationCriteria,
   type InterviewEvaluation,
 } from "@/services/evaluationApi";
@@ -69,13 +73,17 @@ function CriteriaBars({ criteria }: { criteria: EvaluationCriteria }) {
   );
 }
 
-function PointList({ title, items, tone }: { title: string; items: string[]; tone: "good" | "improve" }) {
+const TONE_CLASS = {
+  good: "text-emerald-700",
+  improve: "text-amber-700",
+  error: "text-destructive",
+} as const;
+
+function PointList({ title, items, tone }: { title: string; items: string[]; tone: keyof typeof TONE_CLASS }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <h4 className={`text-sm font-semibold ${tone === "good" ? "text-emerald-700" : "text-amber-700"}`}>
-        {title}
-      </h4>
+      <h4 className={`text-sm font-semibold ${TONE_CLASS[tone]}`}>{title}</h4>
       <ul className="mt-1 list-disc space-y-1 pl-5 text-sm text-card-foreground">
         {items.map((item) => (
           <li key={item}>{item}</li>
@@ -87,6 +95,7 @@ function PointList({ title, items, tone }: { title: string; items: string[]; ton
 
 function AnswerCard({ item, position }: { item: AnswerEvaluation; position: number }) {
   const [showAnswer, setShowAnswer] = useState(false);
+  const [showSuggestion, setShowSuggestion] = useState(false);
 
   return (
     <article className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -121,7 +130,64 @@ function AnswerCard({ item, position }: { item: AnswerEvaluation; position: numb
         <PointList title="Pontos fortes" items={item.strengths} tone="good" />
         <PointList title="O que melhorar" items={item.improvements} tone="improve" />
       </div>
+
+      {/* feat(feedback): erros concretos no que foi dito e exemplo de resposta melhor */}
+      {item.mistakes.length > 0 && (
+        <div className="mt-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4">
+          <PointList title="Erros e pontos de atenção no que você disse" items={item.mistakes} tone="error" />
+        </div>
+      )}
+
+      {item.suggested_answer && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowSuggestion((value) => !value)}
+            aria-expanded={showSuggestion}
+            className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            {showSuggestion ? "Esconder exemplo de resposta" : "Ver como você poderia responder"}
+          </button>
+          {showSuggestion && (
+            <div className="mt-2 rounded-lg border-l-4 border-primary bg-secondary/60 px-4 py-3">
+              <p className="text-sm leading-relaxed text-foreground">{item.suggested_answer}</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Os trechos entre colchetes são informações que você pode completar com a sua experiência.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </article>
+  );
+}
+
+// feat(behavioral): perfil traçado a partir desta entrevista comportamental.
+function BehavioralProfileSection({ profile }: { profile: BehavioralProfile }) {
+  return (
+    <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wider text-primary">Seu perfil comportamental</p>
+      <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-card-foreground">{profile.archetype.name}</h2>
+      <p className="mt-1 text-sm text-muted-foreground">{profile.archetype.description}</p>
+      <p className="mt-3 text-sm leading-relaxed text-card-foreground">{profile.description}</p>
+
+      <div className="mt-6">
+        <h3 className="mb-2 text-sm font-semibold text-card-foreground">Competências demonstradas</h3>
+        <CompetencyRadar items={profile.competencies} />
+      </div>
+
+      <div className="mt-6 border-t border-border pt-6">
+        <h3 className="text-sm font-semibold text-card-foreground">Uso do método STAR</h3>
+        <p className="mb-3 mt-1 text-xs text-muted-foreground">
+          O quanto suas respostas deixaram claros a situação, a tarefa, a sua ação e o resultado.
+        </p>
+        <ScoreBars items={profile.star} max={10} suffix="/10" />
+      </div>
+
+      <Link to="/perfil" className="mt-6 inline-block text-sm font-semibold text-primary hover:underline">
+        Ver meu perfil completo e a evolução →
+      </Link>
+    </section>
   );
 }
 
@@ -170,7 +236,8 @@ function InterviewResultPage() {
           <p className="text-sm font-bold uppercase tracking-wider text-highlight">Resultado da entrevista</p>
           <h1 className="mt-2 text-3xl font-extrabold tracking-tight">Avaliação das suas respostas</h1>
           <p className="mt-2 max-w-2xl text-primary-foreground/85">
-            A IA avaliou cada resposta em relevância, coerência, completude e adequação, de 0 a 10.
+            A IA avaliou cada resposta em relevância, coerência, completude e adequação, de 0 a 10, e
+            apontou o que você fez bem, os erros e como melhorar.
           </p>
         </div>
       </section>
@@ -195,18 +262,39 @@ function InterviewResultPage() {
                 <p className="mt-1 text-sm font-semibold text-muted-foreground">
                   {scoreLabel(evaluation.overall_score)}
                 </p>
+                {evaluation.seniority && (
+                  <p className="mt-2 inline-block rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-secondary-foreground">
+                    Avaliada para o nível {seniorityLabel(evaluation.seniority)}
+                  </p>
+                )}
               </div>
               <div className="sm:border-l sm:border-border sm:pl-6">
                 <h2 className="text-base font-semibold text-card-foreground">Resumo geral</h2>
                 <p className="mt-1 text-sm leading-relaxed text-card-foreground">{evaluation.summary}</p>
+                <a href="#trilha" className="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
+                  Ver sua trilha de estudos ↓
+                </a>
               </div>
             </section>
 
-            <div className="mt-6 space-y-4">
+            {(evaluation.highlights.length > 0 || evaluation.next_steps.length > 0) && (
+              <section className="mt-4 grid gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm sm:grid-cols-2">
+                <PointList title="O que você fez bem" items={evaluation.highlights} tone="good" />
+                <PointList title="Prioridades para a próxima entrevista" items={evaluation.next_steps} tone="improve" />
+              </section>
+            )}
+
+            {evaluation.behavioral_profile && <BehavioralProfileSection profile={evaluation.behavioral_profile} />}
+
+            <h2 className="mt-8 text-lg font-bold text-foreground">Feedback de cada resposta</h2>
+            <div className="mt-3 space-y-4">
               {evaluation.answers.map((item, index) => (
                 <AnswerCard key={item.order_index} item={item} position={index + 1} />
               ))}
             </div>
+
+            {/* feat(roadmap-ia): só depois da avaliação, que é a base da trilha */}
+            <InterviewRoadmapSection sessionId={session} />
           </>
         )}
 

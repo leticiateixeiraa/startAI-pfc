@@ -55,6 +55,7 @@ def _sessao(index: int = 0, finished: bool = False, texto: str | None = "usar-ba
         id="sessao-1",
         category=CATEGORIA,
         presentation_type=CATEGORIA,
+        seniority=None,
         current_index=index,
         current_question_text=texto,
         finished=finished,

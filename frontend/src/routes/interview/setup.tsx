@@ -3,10 +3,13 @@ import { useState } from "react";
 import { ErrorState } from "@/components/interview/ErrorState";
 import { InterviewForm, type InterviewFormValues } from "@/components/interview/InterviewForm";
 import { createInterview, ApiError } from "@/services/interviewApi";
-import { saveInterviewSession } from "@/services/interviewSession";
 import type { InterviewRequest } from "@/types/interview";
 
 export const Route = createFileRoute("/interview/setup")({
+  // feat(onboarding): o resultado do questionário pode trazer o cargo sugerido.
+  validateSearch: (busca: Record<string, unknown>): { cargo?: string } => ({
+    cargo: typeof busca.cargo === "string" ? busca.cargo : undefined,
+  }),
   beforeLoad: () => {
     if (!localStorage.getItem("access_token")) {
       throw redirect({ to: "/" });
@@ -33,6 +36,7 @@ export const Route = createFileRoute("/interview/setup")({
 
 function InterviewSetupPage() {
   const navigate = useNavigate();
+  const { cargo } = Route.useSearch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastValues, setLastValues] = useState<InterviewFormValues | null>(null);
@@ -45,13 +49,14 @@ function InterviewSetupPage() {
     const request: InterviewRequest = {
       job_title: values.jobTitle,
       presentation_type: values.presentationType,
+      seniority: values.seniority,
       ...(values.jobDescription ? { job_description: values.jobDescription } : {}),
     };
 
     try {
       const response = await createInterview(request);
-      saveInterviewSession({ request, response });
-      navigate({ to: "/interview/questions" });
+      // O id vai na URL: recarregar a página ou voltar depois continua a mesma entrevista.
+      navigate({ to: "/interview/questions", search: { session: response.session_id } });
     } catch (error) {
       const message =
         error instanceof ApiError
@@ -94,7 +99,11 @@ function InterviewSetupPage() {
             </button>
           </div>
         ) : (
-          <InterviewForm isSubmitting={isSubmitting} onSubmit={generateInterview} />
+          <InterviewForm
+            isSubmitting={isSubmitting}
+            onSubmit={generateInterview}
+            initialJobTitle={cargo}
+          />
         )}
       </div>
     </main>
