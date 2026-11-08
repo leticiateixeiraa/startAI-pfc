@@ -3,7 +3,6 @@ import { useState } from "react";
 import { ErrorState } from "@/components/interview/ErrorState";
 import { InterviewForm, type InterviewFormValues } from "@/components/interview/InterviewForm";
 import { createInterview, ApiError } from "@/services/interviewApi";
-import { saveInterviewSession } from "@/services/interviewSession";
 import type { InterviewRequest } from "@/types/interview";
 
 export const Route = createFileRoute("/interview/setup")({
@@ -56,8 +55,8 @@ function InterviewSetupPage() {
 
     try {
       const response = await createInterview(request);
-      saveInterviewSession({ request, response });
-      navigate({ to: "/interview/questions" });
+      // O id vai na URL: recarregar a página ou voltar depois continua a mesma entrevista.
+      navigate({ to: "/interview/questions", search: { session: response.session_id } });
     } catch (error) {
       const message =
         error instanceof ApiError
