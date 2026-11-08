@@ -44,11 +44,11 @@ Escopo definido na Ficha de Caracterização do projeto. Situação em novembro/
 | 1 | Cadastro, login e autenticação (JWT, bcrypt, recuperação de senha) | Letícia | ✅ Pronta |
 | 2 | Seleção da vaga/tipo de apresentação e perguntas geradas por IA | Leonardo | ✅ Pronta |
 | 3 | Entrevistador dinâmico (adaptação das perguntas às respostas) | Gabriel | ✅ Pronta |
-| 4 | Captura de áudio e transcrição da resposta (Speech-to-Text) | Gabriel | ⏳ A fazer |
-| 5 | Analisador de oratória (vícios, repetições, duração, palavras por minuto) | Gabriel | ⏳ A fazer |
-| 6 | Histórico de entrevistas e painel de evolução | Leonardo | 🟡 Histórico pronto; falta o painel de evolução |
-| 7 | Recomendação de vagas compatíveis com o perfil do aluno | Letícia | ⏳ A fazer |
-| 8 | Trilhas de estudo personalizadas | Leonardo | 🟡 API pronta; falta geração automática e tela |
+| 4 | Captura de áudio e transcrição da resposta (Speech-to-Text) | Gabriel | ✅ Pronta |
+| 5 | Analisador de oratória (vícios, repetições, duração, palavras por minuto) | Gabriel | ⏳ Em andamento (a transcrição já guarda o texto literal e a duração) |
+| 6 | Histórico de entrevistas e painel de evolução | Leonardo | ✅ Pronta |
+| 7 | Recomendação de vagas compatíveis com o perfil do aluno | Letícia | ✅ Pronta |
+| 8 | Trilhas de estudo personalizadas | Leonardo | ✅ Pronta |
 | 9 | Avaliação do conteúdo das respostas por IA (nota e feedback) | Letícia | ✅ Pronta |
 | 10 | Painel administrativo (usuários, auditoria geral e métricas) | Letícia | ✅ Pronta |
 
@@ -71,6 +71,7 @@ O sistema segue o modelo cliente-servidor, dividido em camadas de apresentação
 | Banco de dados | PostgreSQL, com SQLAlchemy (ORM) |
 | Filas / cache | Redis |
 | APIs de IA | Google Gemini (geração e adaptação de perguntas, avaliação das respostas e transcrição do áudio) |
+| API de vagas | Jooble (vagas reais no Brasil, plano gratuito) |
 | Testes | Pytest (back-end); Jest / React Testing Library (front-end) |
 | Segurança | JWT, bcrypt |
 | Versionamento | Git e GitHub |
@@ -143,6 +144,47 @@ python -m app.scripts.promote_admin email@exemplo.com          # torna admin
 python -m app.scripts.promote_admin email@exemplo.com --revoke # remove
 ```
 
+## Recomendação de vagas
+
+A página **Vagas** mostra vagas **reais** publicadas no último mês no Brasil,
+buscadas na API da [Jooble](https://br.jooble.org/api/about), e ordena cada uma
+por **compatibilidade** com o perfil do aluno (`app/jobs/`). A candidatura
+é feita no site da vaga, pois candidatar-se pela plataforma está fora do escopo.
+
+**Perfil do aluno**, montado com o que ele já fez no StartAI:
+
+| Dado | De onde vem |
+|---|---|
+| Cargo | Cargo mais treinado nas entrevistas; sem entrevista, o primeiro cargo da área indicada pelo questionário |
+| Nível | Nível escolhido nas entrevistas (estágio a sênior), ajustado pelo desempenho |
+| Desempenho | Média das notas da avaliação por IA |
+| Habilidades | Tecnologias citadas no cargo e nas respostas das entrevistas, mais as da área do questionário |
+
+**Regras de negócio** (`app/jobs/service.py`):
+
+- **RN01:** só há recomendação com ao menos uma entrevista com cargo ou o
+  questionário respondido; sem isso, a página convida a treinar;
+- **RN02, nível compatível com o desempenho:** com média ≥ 7, o nível treinado;
+  entre 4 e 7, o mesmo nível com sugestão de treinar mais; abaixo de 4, um nível
+  abaixo (ex.: júnior → estágio);
+- **RN03, compatibilidade de 0 a 100%** calculada pelo backend: até 50 pontos
+  pelo título (palavras do cargo), até 25 pelo nível e até 25 pelas
+  habilidades do aluno citadas na vaga. Cada vaga mostra os motivos;
+- **RN04:** as vagas ficam salvas por 24 h (tabela `job_recommendations`).
+  Reabrir a página não gasta a cota da API (o plano gratuito da Jooble tem
+  500 chamadas no total por chave); o botão **Atualizar vagas** força
+  uma nova busca, e mudar de cargo ou de nível invalida a lista;
+- **RN05:** se a Jooble falhar, aparecem as últimas vagas salvas, com aviso.
+
+**LGPD:** para a Jooble vai só o texto da busca (cargo e nível); nome,
+e-mail e respostas não saem do backend. As vagas salvas são apagadas na
+exclusão da conta. A busca na API é auditada como `jobs.recommended`, só com
+a quantidade de vagas. Os links das vagas só são aceitos se forem `http(s)`.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/jobs/recommendations` | Perfil e vagas recomendadas (`?refresh=true` força nova busca) |
+
 ## Exclusão de conta (LGPD)
 
 O direito de eliminação dos dados (LGPD, Art. 18, VI) pode ser exercido de
@@ -157,8 +199,9 @@ dois jeitos, com a mesma regra (`app/lgpd/service.py`):
 O que acontece na exclusão:
 
 - **São apagados** o cadastro, as entrevistas (sessões, perguntas e
-  respostas), as avaliações da IA, as trilhas de estudo e os tokens de
-  redefinição de senha;
+  respostas), as avaliações da IA, os perfis comportamentais, o questionário
+  de primeiro acesso, as trilhas de estudo, as vagas recomendadas e os tokens
+  de redefinição de senha;
 - **A auditoria é anonimizada, e não apagada:** o vínculo com a pessoa
   (`user_id`) e o IP são removidos, mas o registro do evento continua, para
   fins de segurança (legítimo interesse);
@@ -248,6 +291,8 @@ A chave do Gemini é gratuita: https://aistudio.google.com/apikey.
 | `JWT_SECRET_KEY` | backend | sim | Assinatura do token de login (gerada pelo script) |
 | `GEMINI_API_KEY` | backend | sim | Perguntas e avaliação por IA |
 | `GEMINI_MODEL` | backend | não | Modelo do Gemini (padrão `gemini-3.6-flash`) |
+| `JOOBLE_API_KEY` | backend | não | Busca de vagas reais (página Vagas). Chave gratuita do Brasil em https://br.jooble.org/api/about |
+| `JOOBLE_API_URL` | backend | não | Endereço da API (padrão `https://br.jooble.org/api/`) |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | backend | não | Validade do login (padrão 1440 = 24h) |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | backend | não | E-mail de "esqueci minha senha" |
 | `FRONTEND_URL` | backend | não | Endereço usado no link do e-mail |
