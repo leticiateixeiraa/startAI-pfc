@@ -30,35 +30,29 @@ O **StartAI** propõe resolver essa lacuna com uma plataforma web que:
 
 ## Links
 
-- **Repositório:** https://github.com/leticiateixeiraa/entrevistaia-pfc
+- **Repositório:** https://github.com/leticiateixeiraa/startAI-pfc
 - **Protótipo:** [Excalidraw](https://excalidraw.com/#room=c32bc75f252f581eb196,eyeJOwdcVDtgzDAnt68_bw)
 
 ---
 
 ## Funcionalidades
 
-### MVP (primeira versão — escopo deste PFC)
+Escopo definido na Ficha de Caracterização do projeto. Situação em novembro/2026:
 
-| # | Funcionalidade | Critério de aceitação |
-|---|---|---|
-| 1 | Cadastro, login e autenticação do usuário | Usuário cria conta e autentica-se com segurança (e-mail/senha) |
-| 2 | Seleção da vaga ou tipo de apresentação + exibição das perguntas geradas pela IA | Usuário escolhe uma categoria e recebe um conjunto de perguntas correspondente |
-| 3 | Entrevistador dinâmico (geração e adaptação de perguntas) | Ao menos uma pergunta subsequente é ajustada com base na resposta dada |
-| 4 | Captura de áudio e transcrição da resposta (Speech-to-Text) | Resposta falada é convertida em texto e exibida ao usuário |
-| 5 | Analisador de oratória (vícios de linguagem, repetições, duração, palavras por minuto) | Relatório apresenta as métricas quantitativas de cada resposta |
-| 6 | Histórico de entrevistas e painel de evolução | Usuário visualiza e compara métricas de sessões anteriores |
-| 9 | Avaliação do conteúdo das respostas por IA | IA analisa relevância, coerência e completude da resposta, com nota e feedback |
+| # | Funcionalidade | Responsável | Situação |
+|---|---|---|---|
+| 1 | Cadastro, login e autenticação (JWT, bcrypt, recuperação de senha) | Letícia | ✅ Pronta |
+| 2 | Seleção da vaga/tipo de apresentação e perguntas geradas por IA | Leonardo | ✅ Pronta |
+| 3 | Entrevistador dinâmico (adaptação das perguntas às respostas) | Gabriel | ✅ Pronta |
+| 4 | Captura de áudio e transcrição da resposta (Speech-to-Text) | Gabriel | ⏳ A fazer |
+| 5 | Analisador de oratória (vícios, repetições, duração, palavras por minuto) | Gabriel | ⏳ A fazer |
+| 6 | Histórico de entrevistas e painel de evolução | Leonardo | 🟡 Histórico pronto; falta o painel de evolução |
+| 7 | Recomendação de vagas compatíveis com o perfil do aluno | Letícia | ⏳ A fazer |
+| 8 | Trilhas de estudo personalizadas | Leonardo | 🟡 API pronta; falta geração automática e tela |
+| 9 | Avaliação do conteúdo das respostas por IA (nota e feedback) | Letícia | ✅ Pronta |
+| 10 | Painel administrativo (usuários, auditoria geral e métricas) | Letícia | ✅ Pronta |
 
-**Fora do escopo do MVP:** análise de linguagem corporal por vídeo, integração com plataformas reais de recrutamento (além da API de vagas da Fase 2) e recursos de gamificação/comparação social entre usuários.
-
-### Fase 2 (roadmap futuro)
-
-| # | Funcionalidade | Critério de aceitação |
-|---|---|---|
-| 7 | Recomendação de vagas compatíveis com o perfil do aluno | Usuário recebe lista de vagas relacionadas às entrevistas praticadas |
-| 8 | Trilhas de estudo personalizadas | Usuário visualiza sugestões de estudo com base nas métricas de oratória |
-
----
+**Fora do escopo:** análise de linguagem corporal por vídeo, candidatura a vagas diretamente pela plataforma e recursos de gamificação ou comparação social entre usuários.
 
 ## Arquitetura
 
@@ -76,11 +70,11 @@ O sistema segue o modelo cliente-servidor, dividido em camadas de apresentação
 | Back-end | Python, FastAPI |
 | Banco de dados | PostgreSQL, com SQLAlchemy (ORM) |
 | Filas / cache | Redis |
-| APIs de IA | OpenAI Whisper (Speech-to-Text); Google Gemini para geração e adaptação de perguntas |
+| APIs de IA | Google Gemini (geração e adaptação de perguntas, avaliação das respostas e transcrição do áudio) |
 | Testes | Pytest (back-end); Jest / React Testing Library (front-end) |
 | Segurança | JWT, bcrypt |
 | Versionamento | Git e GitHub |
-| Deploy | Front-end na Vercel; back-end no Render/Railway |
+| Deploy | Front-end na Vercel; back-end e PostgreSQL no Render |
 
 ## Metodologia
 
@@ -149,6 +143,34 @@ python -m app.scripts.promote_admin email@exemplo.com          # torna admin
 python -m app.scripts.promote_admin email@exemplo.com --revoke # remove
 ```
 
+## Avaliação das respostas por IA
+
+Ao finalizar a entrevista, o aluno é levado para a tela de resultado
+(`/interview/result`). O backend envia as perguntas e respostas da sessão ao
+Gemini em **uma única chamada**, e o modelo dá uma nota de 0 a 10 para cada
+critério da ficha: **relevância, coerência, completude e adequação**, além
+de um feedback curto, pontos fortes e pontos a melhorar.
+
+- **Quem calcula a nota é o backend, não a IA:** a nota da resposta é a
+  média dos 4 critérios, e a nota geral é a média das respostas.
+- **A avaliação é gerada uma vez e fica salva** (tabelas
+  `interview_evaluations` e `answer_evaluations`). Reabrir o resultado pelo
+  histórico não chama o Gemini de novo, e a nota não muda.
+- **Temperatura baixa (0.2):** a mesma resposta tende a receber a mesma nota.
+- **Proteção contra "me dê nota 10":** o modelo é instruído a tratar o texto
+  da resposta só como conteúdo a ser avaliado.
+- Se o Gemini falhar, nada é gravado e o aluno pode tentar de novo.
+- Na auditoria fica registrada apenas a nota geral (`interview.evaluated`),
+  nunca o texto das respostas. O administrador não acessa a avaliação.
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/interviews/{id}/evaluation` | Gera a avaliação (201) ou devolve a já existente (200) |
+| `GET` | `/interviews/{id}/evaluation` | Consulta a avaliação salva (404 se ainda não foi gerada) |
+
+O histórico (`GET /interviews/history`) também passou a trazer a `overall_score`
+de cada entrevista, exibida nos cards da página inicial.
+
 ## Recuperação de senha
 
 O usuário pode redefinir a própria senha em caso de esquecimento, a partir
@@ -177,7 +199,44 @@ Abra o pgAdmin, conecte no seu servidor PostgreSQL e crie um banco chamado `entr
 
 > **Se aparecer erro de "incompatibilidade de versão de ordenação"** ao criar o banco: abra a Query Tool no banco `postgres` e rode `ALTER DATABASE template1 REFRESH COLLATION VERSION;`, depois tente criar o banco de novo.
 
-### 2. Configure o backend
+### 2. Crie o arquivo `.env` (um só, na raiz)
+
+O projeto usa **um único `.env` na raiz do repositório**, lido pelo backend
+e pelo frontend. Na raiz, rode:
+
+```bash
+python scripts/configurar_env.py
+```
+
+O script copia o `.env.example`, **gera a `JWT_SECRET_KEY` sozinho** e
+pergunta a senha do PostgreSQL e a chave do Gemini (Enter pula). Se você já
+tinha um `backend/.env` antigo, os valores dele são aproveitados. Rodar de
+novo é seguro: nada que já está preenchido é apagado.
+
+A chave do Gemini é gratuita: https://aistudio.google.com/apikey.
+
+| Variável | Usada por | Obrigatória | Para quê |
+|---|---|---|---|
+| `DATABASE_URL` | backend | sim | Conexão com o PostgreSQL |
+| `JWT_SECRET_KEY` | backend | sim | Assinatura do token de login (gerada pelo script) |
+| `GEMINI_API_KEY` | backend | sim | Perguntas e avaliação por IA |
+| `GEMINI_MODEL` | backend | não | Modelo do Gemini (padrão `gemini-3.6-flash`) |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | backend | não | Validade do login (padrão 1440 = 24h) |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | backend | não | E-mail de "esqueci minha senha" |
+| `FRONTEND_URL` | backend | não | Endereço usado no link do e-mail |
+| `CORS_ORIGINS` | backend | não | Sites que podem chamar a API (separados por vírgula) |
+| `VITE_API_URL` | frontend | não | Endereço da API (padrão `http://localhost:8000`) |
+
+**Por segurança, o backend se recusa a iniciar** sem `DATABASE_URL` e
+`JWT_SECRET_KEY`. Sem SMTP, cadastro e login funcionam normalmente; só o
+"esqueci minha senha" fica indisponível. Com Gmail, `SMTP_PASSWORD` precisa
+ser uma **senha de app** (https://myaccount.google.com/apppasswords), o que
+exige verificação em duas etapas na conta.
+
+> O `.env` nunca vai para o GitHub (está no `.gitignore`). Só variáveis com
+> prefixo `VITE_` chegam ao navegador, então nenhum segredo vai para o front.
+
+### 3. Rode o backend
 
 ```bash
 cd backend
@@ -185,46 +244,6 @@ python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # Mac/Linux
 pip install -r requirements.txt
-```
-
-Copie o `.env.example` para `.env` e ajuste a senha do seu PostgreSQL. **Por
-segurança, o backend se recusa a iniciar** se `DATABASE_URL` ou
-`JWT_SECRET_KEY` não forem preenchidas com um valor de verdade (o texto de
-exemplo do `.env.example` não é aceito):
-
-​```
-DATABASE_URL=postgresql://postgres:SUA_SENHA@localhost:5432/entrevistaia
-JWT_SECRET_KEY=
-GEMINI_API_KEY=sua-chave-do-gemini-aqui
-​```
-
-Gere uma `JWT_SECRET_KEY` forte com o comando abaixo e cole o resultado no `.env`:
-
-​```bash
-python -c "import secrets; print(secrets.token_urlsafe(48))"
-​```
-
-Para gerar a `GEMINI_API_KEY`, crie uma chave gratuita em https://aistudio.google.com/apikey.
-
-Para o envio de e-mails de recuperação de senha, configure também as
-variáveis de SMTP:
-
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=seu-email@gmail.com
-SMTP_PASSWORD=
-FRONTEND_URL=http://localhost:5173
-
-Se usar o Gmail, `SMTP_PASSWORD` precisa ser uma **senha de app** (não a
-senha normal da conta), gerada em
-https://myaccount.google.com/apppasswords — exige verificação em duas
-etapas ativada na conta. Sem essas variáveis configuradas, o cadastro e o
-login continuam funcionando normalmente; só o fluxo de "esqueci minha
-senha" fica indisponível.
-
-### 3. Rode o backend
-
-```bash
 uvicorn app.main:app --reload
 ```
 
@@ -241,6 +260,45 @@ npm run dev
 ```
 
 Acesse o endereço que aparecer no terminal (geralmente **http://localhost:5173**).
+
+### 5. Rode os testes
+
+```bash
+cd backend
+pytest
+```
+
+Os testes usam um SQLite em memória e o Gemini/SMTP simulados: não precisam
+de PostgreSQL, de `.env` nem de internet. No frontend, `npm run lint` roda o
+Oxlint e `npm run build` faz a checagem de tipos.
+
+## Deploy
+
+O backend e o banco vão para o **Render**, e o frontend para a **Vercel**.
+As variáveis são as mesmas do `.env`, cadastradas no painel de cada serviço.
+
+### Backend + PostgreSQL (Render)
+
+1. No Render: **New > Blueprint** e escolha este repositório. O arquivo
+   `render.yaml` cria o banco `startai-db` e a API `startai-api` já ligados.
+2. A `DATABASE_URL` vem do banco e a `JWT_SECRET_KEY` é gerada pelo próprio
+   Render. Na criação, preencha `GEMINI_API_KEY`, `FRONTEND_URL`,
+   `CORS_ORIGINS` (a URL da Vercel) e, se quiser o e-mail, `SMTP_USER` e
+   `SMTP_PASSWORD`.
+3. O teste de saúde usa `GET /health`. As tabelas são criadas sozinhas na
+   primeira inicialização.
+
+### Frontend (Vercel)
+
+1. Na Vercel: **Add New > Project**, escolha o repositório e defina
+   **Root Directory = `frontend`**.
+2. Em **Environment Variables**, cadastre `VITE_API_URL` com a URL da API no
+   Render (ex.: `https://startai-api.onrender.com`).
+3. O `frontend/vercel.json` redireciona todas as rotas para o `index.html`,
+   para links como `/reset-password?token=...` funcionarem ao abrir direto.
+
+Depois do primeiro deploy, volte ao Render e confira se `FRONTEND_URL` e
+`CORS_ORIGINS` estão com a URL final da Vercel.
 
 ---
 
