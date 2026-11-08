@@ -33,6 +33,10 @@ os.environ["JWT_SECRET_KEY"] = "chave-exclusiva-dos-testes-automatizados"
 # load_dotenv do app/config.py não preencher de novo a partir do .env.
 for _variavel in ("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM"):
     os.environ[_variavel] = ""
+# Mesmo motivo para a API de vagas: sem chave, nenhum teste chama a Jooble de
+# verdade (os testes da recomendação usam uma API de vagas falsa).
+for _variavel in ("JOOBLE_API_KEY",):
+    os.environ[_variavel] = ""
 
 import pytest  # noqa: E402
 from sqlalchemy import DateTime, create_engine, event, inspect  # noqa: E402
@@ -125,3 +129,4 @@ def sem_servicos_externos(monkeypatch):
     monkeypatch.setattr(
         "app.questions.llm_service.genai.Client", _servico_externo_bloqueado
     )
+    monkeypatch.setattr("app.jobs.jooble.httpx.post", _servico_externo_bloqueado)

@@ -20,6 +20,7 @@ import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as TermosRouteImport } from './routes/termos'
+import { Route as VagasRouteImport } from './routes/vagas'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAuditRouteImport } from './routes/admin/audit'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
@@ -82,6 +83,11 @@ const TermosRoute = TermosRouteImport.update({
   path: '/termos',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VagasRoute = VagasRouteImport.update({
+  id: '/vagas',
+  path: '/vagas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/vagas': typeof VagasRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/vagas': typeof VagasRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/termos': typeof TermosRoute
+  '/vagas': typeof VagasRoute
   '/admin/audit': typeof AdminAuditRoute
   '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/termos'
+    | '/vagas'
     | '/admin/audit'
     | '/admin/users'
     | '/interview/questions'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/termos'
+    | '/vagas'
     | '/admin/audit'
     | '/admin/users'
     | '/interview/questions'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/termos'
+    | '/vagas'
     | '/admin/audit'
     | '/admin/users'
     | '/interview/questions'
@@ -243,6 +255,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermosRoute: typeof TermosRoute
+  VagasRoute: typeof VagasRoute
   AdminAuditRoute: typeof AdminAuditRoute
   AdminUsersRoute: typeof AdminUsersRoute
   InterviewQuestionsRoute: typeof InterviewQuestionsRoute
@@ -330,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermosRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/vagas': {
+      id: '/vagas'
+      path: '/vagas'
+      fullPath: '/vagas'
+      preLoaderRoute: typeof VagasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
@@ -387,6 +407,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermosRoute: TermosRoute,
+  VagasRoute: VagasRoute,
   AdminAuditRoute: AdminAuditRoute,
   AdminUsersRoute: AdminUsersRoute,
   InterviewQuestionsRoute: InterviewQuestionsRoute,
