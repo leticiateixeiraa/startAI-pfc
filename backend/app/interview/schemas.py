@@ -35,6 +35,7 @@ class InterviewHistoryOut(BaseModel):
     session_id: uuid.UUID
     category: str
     presentation_type: str | None
+    seniority: str | None = None
     finished: bool
     answered_count: int
     created_at: datetime

@@ -77,8 +77,12 @@ def on_startup():
             )
 
     # feat(feedback): compatibilidade com avaliações gravadas antes dos erros
-    # apontados, da resposta sugerida e dos destaques gerais.
+    # apontados, da resposta sugerida e dos destaques gerais, e com sessões
+    # criadas antes do nível da vaga.
     novas_colunas = {
+        "interview_sessions": {
+            "seniority": "VARCHAR(20)",
+        },
         "interview_evaluations": {
             "highlights": "TEXT NOT NULL DEFAULT '[]'",
             "next_steps": "TEXT NOT NULL DEFAULT '[]'",

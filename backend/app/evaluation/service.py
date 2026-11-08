@@ -67,6 +67,7 @@ def gerar_avaliacao(db: Session, session: InterviewSession) -> tuple[InterviewEv
     resultado = avaliar_respostas(
         [(resposta.question_text, resposta.answer_text) for resposta in respostas],
         session.presentation_type,
+        session.seniority,
     )
 
     notas = [calcular_nota_resposta(item) for item in resultado["answers"]]
@@ -119,6 +120,7 @@ def montar_resposta(db: Session, avaliacao: InterviewEvaluation) -> dict:
     return {
         "session_id": avaliacao.session_id,
         "presentation_type": sessao.presentation_type if sessao else None,
+        "seniority": sessao.seniority if sessao else None,
         "overall_score": avaliacao.overall_score,
         "summary": avaliacao.summary,
         "highlights": json.loads(avaliacao.highlights or "[]"),
