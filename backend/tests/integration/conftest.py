@@ -36,6 +36,31 @@ from app.main import app
 from app.models import base
 
 
+async def _app_que_responde_depois_de_fechar_o_banco(scope, receive, send):
+    """Entrega a resposta ao teste só DEPOIS que a requisição terminou por
+    completo, incluindo o `db.close()` do `get_db`.
+
+    Por quê: no banco de teste, servidor e teste dividem UMA conexão SQLite
+    (StaticPool). Nesta versão do FastAPI, a saída das dependências com
+    `yield` roda depois de a resposta ser enviada. Às vezes o `db.close()` do
+    servidor (que faz rollback na conexão) caía bem no meio de uma escrita do
+    próprio teste, como a promoção a admin em `admin_autenticado`, e a
+    desfazia: o admin recebia 403 em ~1 de cada 12 execuções. Só afeta os
+    testes; em produção cada requisição tem a sua conexão do PostgreSQL.
+    """
+    if scope["type"] != "http":
+        await app(scope, receive, send)
+        return
+    mensagens = []
+
+    async def guardar(mensagem):
+        mensagens.append(mensagem)
+
+    await app(scope, receive, guardar)
+    for mensagem in mensagens:
+        await send(mensagem)
+
+
 @pytest.fixture(scope="session")
 def url_base():
     # O socket é aberto antes do servidor: a porta já aceita conexões na fila
@@ -47,7 +72,9 @@ def url_base():
     sock.listen(128)
     porta = sock.getsockname()[1]
 
-    servidor = uvicorn.Server(uvicorn.Config(app, lifespan="on", log_level="warning"))
+    servidor = uvicorn.Server(
+        uvicorn.Config(_app_que_responde_depois_de_fechar_o_banco, lifespan="on", log_level="warning")
+    )
     thread = threading.Thread(target=servidor.run, kwargs={"sockets": [sock]}, daemon=True)
     thread.start()
 
