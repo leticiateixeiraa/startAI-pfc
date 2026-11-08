@@ -157,6 +157,30 @@ function HomePage() {
                       {new Date(interview.created_at).toLocaleDateString("pt-BR")}
                     </time>
                   </div>
+                  {/* feat(evaluation): nota da IA e acesso ao resultado da entrevista */}
+                  {interview.finished && interview.answered_count > 0 && (
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        {interview.overall_score === null ? (
+                          "Ainda não avaliada"
+                        ) : (
+                          <>
+                            Nota da IA:{" "}
+                            <strong className="text-base text-foreground">
+                              {interview.overall_score.toLocaleString("pt-BR", { minimumFractionDigits: 1 })}
+                            </strong>
+                          </>
+                        )}
+                      </span>
+                      <Link
+                        to="/interview/result"
+                        search={{ session: interview.session_id }}
+                        className="text-sm font-semibold text-primary hover:underline"
+                      >
+                        {interview.overall_score === null ? "Avaliar respostas" : "Ver avaliação"}
+                      </Link>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>

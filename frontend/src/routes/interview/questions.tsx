@@ -33,6 +33,12 @@ function InterviewQuestionsPage() {
   const navigate = useNavigate();
   const session = getInterviewSession();
   const [currentIndex, setCurrentIndex] = useState(0);
+  // Os hooks ficam antes do "if (!session) return": o React exige a mesma
+  // ordem de hooks em toda renderização.
+  const [answer, setAnswer] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [adaptedQuestion, setAdaptedQuestion] = useState<string | null>(null);
 
   if (!session) {
     return (
@@ -55,10 +61,6 @@ function InterviewQuestionsPage() {
 
   const { request, response } = session;
   const questions = [...response.questions].sort((a, b) => a.order - b.order);
-  const [answer, setAnswer] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [adaptedQuestion, setAdaptedQuestion] = useState<string | null>(null);
   const currentQuestion = adaptedQuestion
     ? { order: currentIndex + 1, text: adaptedQuestion }
     : questions[currentIndex];
@@ -75,7 +77,7 @@ function InterviewQuestionsPage() {
       const result = await submitAnswer(response.session_id, answer.trim());
       if (result.finished || isLast) {
         clearInterviewSession();
-        navigate({ to: "/home" });
+        navigate({ to: "/interview/result", search: { session: response.session_id } });
         return;
       }
       setAnswer("");
