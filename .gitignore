@@ -11,6 +11,9 @@ frontend/dist/
 frontend/.env
 
 # Geral
+.env
+.env.*
+!.env.example
 .DS_Store
 *.pyc
 

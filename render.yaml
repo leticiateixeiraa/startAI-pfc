@@ -1,0 +1,49 @@
+# Deploy do backend no Render (Blueprint).
+# No painel do Render: New > Blueprint > escolher este repositório.
+# Ele cria o banco PostgreSQL e a API já ligados; a JWT_SECRET_KEY é gerada
+# pelo próprio Render. As variáveis marcadas com sync: false são pedidas
+# no painel na hora da criação (segredos não ficam no GitHub).
+
+databases:
+  - name: startai-db
+    plan: free
+    databaseName: startai
+    user: startai
+
+services:
+  - type: web
+    name: startai-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DATABASE_URL
+        fromDatabase:
+          name: startai-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.6-flash
+      # URL do frontend na Vercel, ex.: https://startai.vercel.app
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false

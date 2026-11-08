@@ -38,3 +38,5 @@ class InterviewHistoryOut(BaseModel):
     finished: bool
     answered_count: int
     created_at: datetime
+    # Nota geral da avaliação por IA (feature 9); None enquanto não avaliada.
+    overall_score: float | None = None

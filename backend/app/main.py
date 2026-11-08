@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 
+from app import config
 from app.models.base import Base, engine
 from app.auth.router import router as auth_router
 from app.interview.router import router as interview_router
@@ -13,16 +14,16 @@ from app.questions.router import router as questions_router
 from app.audit.router import router as audit_router
 from app.roadmap.router import router as roadmap_router
 from app.admin.router import router as admin_router
+from app.evaluation.router import router as evaluation_router
 
 
 app = FastAPI(title="StartAI API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],  # URLs do Vite em dev
+    # Em dev: o Vite (localhost:5173). Em produção: a URL da Vercel,
+    # cadastrada em CORS_ORIGINS no painel do Render.
+    allow_origins=config.cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,6 +35,7 @@ app.include_router(questions_router)
 app.include_router(audit_router)
 app.include_router(roadmap_router)
 app.include_router(admin_router)
+app.include_router(evaluation_router)
 
 
 @app.on_event("startup")

@@ -21,6 +21,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAuditRouteImport } from './routes/admin/audit'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as InterviewQuestionsRouteImport } from './routes/interview/questions'
+import { Route as InterviewResultRouteImport } from './routes/interview/result'
 import { Route as InterviewSetupRouteImport } from './routes/interview/setup'
 
 const IndexRoute = IndexRouteImport.update({
@@ -83,6 +84,11 @@ const InterviewQuestionsRoute = InterviewQuestionsRouteImport.update({
   path: '/interview/questions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InterviewResultRoute = InterviewResultRouteImport.update({
+  id: '/interview/result',
+  path: '/interview/result',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InterviewSetupRoute = InterviewSetupRouteImport.update({
   id: '/interview/setup',
   path: '/interview/setup',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
+  '/interview/result': typeof InterviewResultRoute
   '/interview/setup': typeof InterviewSetupRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
+  '/interview/result': typeof InterviewResultRoute
   '/interview/setup': typeof InterviewSetupRoute
   '/admin': typeof AdminIndexRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/admin/audit': typeof AdminAuditRoute
   '/admin/users': typeof AdminUsersRoute
   '/interview/questions': typeof InterviewQuestionsRoute
+  '/interview/result': typeof InterviewResultRoute
   '/interview/setup': typeof InterviewSetupRoute
   '/admin/': typeof AdminIndexRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/users'
     | '/interview/questions'
+    | '/interview/result'
     | '/interview/setup'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/users'
     | '/interview/questions'
+    | '/interview/result'
     | '/interview/setup'
     | '/admin'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/admin/audit'
     | '/admin/users'
     | '/interview/questions'
+    | '/interview/result'
     | '/interview/setup'
     | '/admin/'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   AdminAuditRoute: typeof AdminAuditRoute
   AdminUsersRoute: typeof AdminUsersRoute
   InterviewQuestionsRoute: typeof InterviewQuestionsRoute
+  InterviewResultRoute: typeof InterviewResultRoute
   InterviewSetupRoute: typeof InterviewSetupRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InterviewQuestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/interview/result': {
+      id: '/interview/result'
+      path: '/interview/result'
+      fullPath: '/interview/result'
+      preLoaderRoute: typeof InterviewResultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/interview/setup': {
       id: '/interview/setup'
       path: '/interview/setup'
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminAuditRoute: AdminAuditRoute,
   AdminUsersRoute: AdminUsersRoute,
   InterviewQuestionsRoute: InterviewQuestionsRoute,
+  InterviewResultRoute: InterviewResultRoute,
   InterviewSetupRoute: InterviewSetupRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

@@ -7,6 +7,7 @@ export type InterviewHistoryItem = {
   finished: boolean;
   answered_count: number;
   created_at: string;
+  overall_score: number | null;
 };
 
 export async function listInterviewHistory(): Promise<InterviewHistoryItem[]> {
