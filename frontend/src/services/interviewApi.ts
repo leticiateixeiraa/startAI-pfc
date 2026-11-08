@@ -102,6 +102,40 @@ export async function submitAnswer(
   return (await response.json()) as AnswerResponse;
 }
 
+// feat(interview-resume): estado salvo da entrevista, para continuar de onde parou.
+export type InterviewState = {
+  session_id: string;
+  job_title: string | null;
+  presentation_type: string | null;
+  seniority: string | null;
+  finished: boolean;
+  current_question: string | null;
+  answered_count: number;
+  total_questions: number;
+};
+
+export async function getInterviewState(sessionId: string): Promise<InterviewState> {
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}/interviews/${sessionId}`, { headers: authHeaders() });
+  } catch {
+    throw new ApiError("Não foi possível conectar ao servidor. Verifique sua conexão.");
+  }
+
+  if (response.status === 401) {
+    localStorage.removeItem("access_token");
+    window.location.assign("/");
+    throw new ApiError("Sua sessão expirou. Faça login novamente.", 401);
+  }
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { detail?: string };
+    throw new ApiError(body.detail ?? "Não foi possível carregar a entrevista.", response.status);
+  }
+
+  return (await response.json()) as InterviewState;
+}
+
 export async function createInterview(
   request: InterviewRequest,
 ): Promise<InterviewResponse> {

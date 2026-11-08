@@ -3,6 +3,7 @@ import api from "./api";
 export type InterviewHistoryItem = {
   session_id: string;
   category: string;
+  job_title: string | null;
   presentation_type: string | null;
   seniority: string | null;
   finished: boolean;
