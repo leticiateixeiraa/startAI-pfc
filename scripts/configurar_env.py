@@ -8,7 +8,7 @@ Uso (na raiz do repositório):
 O que ele faz:
 - copia o .env.example para .env (se o .env ainda não existir);
 - gera uma JWT_SECRET_KEY forte quando ela estiver vazia;
-- pergunta a senha do PostgreSQL e a chave do Gemini (Enter pula);
+- pergunta a senha do PostgreSQL e as chaves do Gemini e da Jooble (Enter pula);
 - aproveita os valores de um backend/.env antigo, se existir.
 
 Rodar de novo é seguro: o que já está preenchido no .env não é apagado.
@@ -72,6 +72,12 @@ def main() -> None:
         if chave:
             novos["GEMINI_API_KEY"] = chave
 
+    # Vagas (Jooble): opcional, só a página Vagas depende dela.
+    if atuais.get("JOOBLE_API_KEY", "") in VALORES_DE_EXEMPLO:
+        chave_vagas = perguntar("Chave da Jooble (Enter para preencher depois): ")
+        if chave_vagas:
+            novos["JOOBLE_API_KEY"] = chave_vagas
+
     # Reescreve o .env seguindo a ordem e os comentários do .env.example.
     linhas = []
     for linha in EXEMPLO.read_text(encoding="utf-8").splitlines():
@@ -87,7 +93,7 @@ def main() -> None:
     print(f".env salvo em {DESTINO}")
     final = ler_variaveis(DESTINO)
     pendentes = [
-        nome for nome in ("GEMINI_API_KEY",)
+        nome for nome in ("GEMINI_API_KEY", "JOOBLE_API_KEY")
         if final.get(nome, "") in VALORES_DE_EXEMPLO
     ]
     if "SUA_SENHA" in final.get("DATABASE_URL", ""):
