@@ -99,3 +99,9 @@ class ResetPasswordRequest(BaseModel):
         if value.isalnum():
             raise ValueError("A senha precisa conter também um caractere especial (ex: ! @ # $ %)")
         return value
+
+class DeleteAccountRequest(BaseModel):
+    """feat(lgpd): a senha é pedida de novo para confirmar a exclusão da conta,
+    evitando que alguém com o computador desbloqueado apague a conta de outro."""
+
+    password: str
