@@ -11,6 +11,7 @@ import {
 } from "@/components/profile/ProfileCharts";
 import { getOnboardingStatus, type OnboardingStatus } from "@/services/onboardingApi";
 import { getBehavioralProfile, type ConsolidatedProfile } from "@/services/profileApi";
+import { listRoadmaps, roadmapProgress, type Roadmap } from "@/services/roadmapApi";
 
 export const Route = createFileRoute("/perfil")({
   beforeLoad: () => {
@@ -175,17 +176,67 @@ function BehavioralSection({ profile }: { profile: ConsolidatedProfile }) {
   );
 }
 
+// feat(roadmap-ia): trilhas de estudo geradas nas entrevistas, com o progresso.
+function RoadmapsSection({ roadmaps }: { roadmaps: Roadmap[] }) {
+  const generated = roadmaps.filter((roadmap) => roadmap.session_id);
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+      <p className="text-xs font-bold uppercase tracking-wider text-primary">Trilhas de estudo</p>
+      {generated.length === 0 ? (
+        <p className="mt-2 text-sm text-muted-foreground">
+          Ao ver a avaliação de uma entrevista, o StartAI monta uma trilha de estudos para você. Ela aparece aqui.
+        </p>
+      ) : (
+        <ul className="mt-3 divide-y divide-border">
+          {generated.map((roadmap) => {
+            const progress = roadmapProgress(roadmap);
+            return (
+              <li key={roadmap.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-card-foreground">{roadmap.title}</p>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <div className="h-1.5 w-32 overflow-hidden rounded-full bg-muted">
+                      <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress.percent}%` }} />
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {progress.done}/{progress.total} etapas
+                    </span>
+                  </div>
+                </div>
+                <Link
+                  to="/interview/result"
+                  search={{ session: roadmap.session_id ?? "" }}
+                  hash="trilha"
+                  className="text-sm font-semibold text-primary hover:underline"
+                >
+                  Abrir trilha
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
+
 function ProfilePage() {
   const [onboarding, setOnboarding] = useState<OnboardingStatus | null>(null);
   const [profile, setProfile] = useState<ConsolidatedProfile | null>(null);
+  const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
     setError(null);
     try {
-      const [status, behavioral] = await Promise.all([getOnboardingStatus(), getBehavioralProfile()]);
+      const [status, behavioral, trilhas] = await Promise.all([
+        getOnboardingStatus(),
+        getBehavioralProfile(),
+        listRoadmaps(),
+      ]);
       setOnboarding(status);
       setProfile(behavioral);
+      setRoadmaps(trilhas);
     } catch {
       setError("Não foi possível carregar seu perfil.");
     }
@@ -217,6 +268,7 @@ function ProfilePage() {
         {onboarding && profile && (
           <>
             <CareerAreaSection onboarding={onboarding} />
+            <RoadmapsSection roadmaps={roadmaps} />
             <BehavioralSection profile={profile} />
           </>
         )}
