@@ -80,6 +80,12 @@ def excluir_conta(db: Session, user: User) -> dict:
         "interview_evaluations": apagar(
             db.query(InterviewEvaluation).filter(InterviewEvaluation.user_id == user.id)
         ),
+        # As trilhas vêm antes das sessões: a trilha gerada pela IA aponta
+        # para a entrevista de origem (session_id).
+        "roadmap_items": apagar(
+            db.query(LearningRoadmapItem).filter(LearningRoadmapItem.roadmap_id.in_(trilhas))
+        ),
+        "roadmaps": apagar(db.query(LearningRoadmap).filter(LearningRoadmap.user_id == user.id)),
         "interview_answers": apagar(
             db.query(InterviewAnswer).filter(InterviewAnswer.session_id.in_(sessoes))
         ),
@@ -89,10 +95,6 @@ def excluir_conta(db: Session, user: User) -> dict:
         "interview_sessions": apagar(
             db.query(InterviewSession).filter(InterviewSession.user_id == user.id)
         ),
-        "roadmap_items": apagar(
-            db.query(LearningRoadmapItem).filter(LearningRoadmapItem.roadmap_id.in_(trilhas))
-        ),
-        "roadmaps": apagar(db.query(LearningRoadmap).filter(LearningRoadmap.user_id == user.id)),
         "career_onboarding": apagar(
             db.query(CareerOnboarding).filter(CareerOnboarding.user_id == user.id)
         ),

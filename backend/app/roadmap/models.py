@@ -14,6 +14,12 @@ class LearningRoadmap(Base):
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     title = Column(String(160), nullable=False)
     objective = Column(Text, nullable=True)
+    # feat(roadmap-ia): trilha gerada a partir da avaliação de uma entrevista.
+    # Uma por entrevista (único); None nas trilhas criadas à mão (POST /roadmaps).
+    session_id = Column(
+        UUID(as_uuid=True), ForeignKey("interview_sessions.id"), nullable=True, unique=True, index=True
+    )
+    summary = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -27,4 +33,11 @@ class LearningRoadmapItem(Base):
     title = Column(String(160), nullable=False)
     description = Column(Text, nullable=True)
     status = Column(String(20), nullable=False, default="pending")
+    # Campos da trilha gerada por IA (vazios nas etapas criadas à mão).
+    focus = Column(Text, nullable=True)  # por que a etapa existe (ponto fraco da entrevista)
+    estimated_time = Column(String(60), nullable=True)
+    practice = Column(Text, nullable=True)  # exercício prático sugerido
+    # Listas em JSON (texto), como no restante do projeto.
+    tips = Column(Text, nullable=False, default="[]", server_default="[]")
+    resources = Column(Text, nullable=False, default="[]", server_default="[]")
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

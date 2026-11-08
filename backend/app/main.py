@@ -12,6 +12,7 @@ from app.auth.router import router as auth_router
 from app.interview.router import router as interview_router
 from app.questions.router import router as questions_router
 from app.audit.router import router as audit_router
+from app.roadmap.router import interview_router as roadmap_interview_router
 from app.roadmap.router import router as roadmap_router
 from app.admin.router import router as admin_router
 from app.evaluation.router import router as evaluation_router
@@ -36,6 +37,7 @@ app.include_router(interview_router)
 app.include_router(questions_router)
 app.include_router(audit_router)
 app.include_router(roadmap_router)
+app.include_router(roadmap_interview_router)
 app.include_router(admin_router)
 app.include_router(evaluation_router)
 app.include_router(behavioral_router)
@@ -91,6 +93,18 @@ def on_startup():
         "answer_evaluations": {
             "mistakes": "TEXT NOT NULL DEFAULT '[]'",
             "suggested_answer": "TEXT",
+        },
+        # feat(roadmap-ia): trilha gerada a partir da avaliação da entrevista.
+        "learning_roadmaps": {
+            "session_id": "UUID UNIQUE REFERENCES interview_sessions(id)",
+            "summary": "TEXT",
+        },
+        "learning_roadmap_items": {
+            "focus": "TEXT",
+            "estimated_time": "VARCHAR(60)",
+            "practice": "TEXT",
+            "tips": "TEXT NOT NULL DEFAULT '[]'",
+            "resources": "TEXT NOT NULL DEFAULT '[]'",
         },
     }
     with engine.begin() as connection:
