@@ -29,6 +29,7 @@ class AnswerEvaluationOut(BaseModel):
 class InterviewEvaluationOut(BaseModel):
     session_id: uuid.UUID
     presentation_type: str | None = None
+    seniority: str | None = None
     overall_score: float
     summary: str
     highlights: list[str] = []

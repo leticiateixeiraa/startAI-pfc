@@ -51,6 +51,7 @@ def history(
             session_id=session.id,
             category=session.category,
             presentation_type=session.presentation_type,
+            seniority=session.seniority,
             finished=session.finished,
             answered_count=db.query(InterviewAnswer)
             .filter(InterviewAnswer.session_id == session.id)

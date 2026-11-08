@@ -84,10 +84,54 @@ INTERVIEW_RULES = {
 }
 
 
+# Nível da vaga: muda a dificuldade das perguntas e o quanto a avaliação exige.
+SENIORITY_LEVELS = {
+    "estagio": {
+        "label": "Estágio",
+        "rule": (
+            "Candidato ainda estudando, com pouca ou nenhuma experiência profissional. "
+            "Pergunte sobre fundamentos, projetos acadêmicos ou pessoais, vontade de aprender "
+            "e situações da faculdade. Não exija experiência de mercado."
+        ),
+    },
+    "junior": {
+        "label": "Júnior",
+        "rule": (
+            "Até cerca de 2 anos de experiência. Cobre fundamentos sólidos aplicados a tarefas "
+            "bem definidas, as primeiras experiências profissionais e como a pessoa aprende e "
+            "pede ajuda."
+        ),
+    },
+    "pleno": {
+        "label": "Pleno",
+        "rule": (
+            "Profissional que trabalha com autonomia. Aprofunde em decisões técnicas, "
+            "trade-offs, resolução de problemas sem supervisão, qualidade e colaboração com o time."
+        ),
+    },
+    "senior": {
+        "label": "Sênior",
+        "rule": (
+            "Referência técnica do time. Aprofunde em arquitetura, escalabilidade, decisões de "
+            "alto impacto, liderança técnica, mentoria e influência em outras áreas."
+        ),
+    },
+}
+
+
+def seniority_rule(seniority: str | None) -> str:
+    """Trecho do prompt com o nível da vaga; vazio quando não informado."""
+    level = SENIORITY_LEVELS.get(seniority or "")
+    if not level:
+        return ""
+    return f"Nível da vaga: {level['label']}. {level['rule']}"
+
+
 def generate_questions(
     job_title: str,
     presentation_type: str,
     job_description: str | None,
+    seniority: str | None = None,
 ) -> list[str]:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -97,14 +141,16 @@ def generate_questions(
 
     model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
     rule = INTERVIEW_RULES.get(presentation_type, INTERVIEW_RULES["mista"])
+    level_rule = seniority_rule(seniority)
     prompt = (
         "Analise a vaga abaixo e crie de 4 a 6 perguntas de entrevista em "
         "portugues do Brasil.\n\n"
         f"Cargo: {job_title}\n"
         f"Tipo de entrevista: {presentation_type}\n"
         f"Descricao da vaga:\n{job_description or 'Nao informada'}\n\n"
-        f"Regra desta modalidade: {rule}\n\n"
-        "As perguntas devem avaliar competencias, responsabilidades e contexto "
+        f"Regra desta modalidade: {rule}\n"
+        + (f"{level_rule} A dificuldade das perguntas deve combinar com esse nível.\n" if level_rule else "")
+        + "\nAs perguntas devem avaliar competencias, responsabilidades e contexto "
         "especificos da vaga. Evite perguntas genericas quando a descricao trouxer "
         "detalhes. Gere exatamente 5 perguntas. Retorne somente JSON valido no formato: "
         '{"questions": ["pergunta 1", "pergunta 2"]}'
@@ -144,6 +190,7 @@ def generate_adapted_question(
     answer_text: str,
     previous_answers: list[tuple[str, str]],
     presentation_type: str | None = None,
+    seniority: str | None = None,
 ) -> str:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
@@ -164,7 +211,8 @@ def generate_adapted_question(
         f"Histórico:\n{history or 'Nenhum'}\n\n"
         f"Pergunta atual: {current_question}\n"
         f"Resposta atual: {answer_text}\n"
-        f"Regra da modalidade: {INTERVIEW_RULES.get(presentation_type or 'mista', INTERVIEW_RULES['mista'])}"
+        f"Regra da modalidade: {INTERVIEW_RULES.get(presentation_type or 'mista', INTERVIEW_RULES['mista'])}\n"
+        f"{seniority_rule(seniority)}"
     )
 
     try:

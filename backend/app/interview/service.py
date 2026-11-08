@@ -178,6 +178,7 @@ def register_answer_and_get_next(
                 answer_text,
                 previous_answers,
                 session.presentation_type,
+                session.seniority,
             )
             adapted = True
         except LLMGenerationError:

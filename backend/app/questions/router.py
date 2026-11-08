@@ -40,6 +40,7 @@ def start_interview(
             payload.job_title,
             payload.presentation_type,
             payload.job_description,
+            payload.seniority,
         )
     except ValueError as error:
         raise HTTPException(status_code=400, detail=str(error)) from error
@@ -58,7 +59,11 @@ def start_interview(
         uuid.UUID(user_id),
         "interview_session",
         str(session.id),
-        {"presentation_type": payload.presentation_type, "category": category},
+        {
+            "presentation_type": payload.presentation_type,
+            "category": category,
+            "seniority": payload.seniority,
+        },
         ip_address=request.client.host if request.client else None,
     )
     db.commit()

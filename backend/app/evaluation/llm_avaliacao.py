@@ -22,6 +22,7 @@ from app.questions.llm_service import (
     LLMGenerationError,
     _generate_content,
     _generation_error_message,
+    seniority_rule,
 )
 
 logger = logging.getLogger(__name__)
@@ -187,6 +188,7 @@ def _validar_resposta(conteudo: dict, quantidade: int, com_perfil: bool = False)
 def avaliar_respostas(
     perguntas_e_respostas: list[tuple[str, str]],
     presentation_type: str | None = None,
+    seniority: str | None = None,
 ) -> dict:
     """Envia a entrevista ao Gemini e devolve as notas já validadas.
 
@@ -209,6 +211,13 @@ def avaliar_respostas(
 
     regra = INTERVIEW_RULES.get(presentation_type or "mista", INTERVIEW_RULES["mista"])
     com_perfil = presentation_type == TIPO_COMPORTAMENTAL
+    regra_do_nivel = seniority_rule(seniority)
+    calibragem = (
+        f"{regra_do_nivel}\nAjuste a exigência a esse nível: uma resposta adequada para ele "
+        "pode receber nota alta mesmo sem a profundidade esperada de um nível acima.\n"
+        if regra_do_nivel
+        else ""
+    )
     entrevista = "\n\n".join(
         f"Resposta {numero}\nPergunta: {pergunta}\nResposta do aluno: {resposta}"
         for numero, (pergunta, resposta) in enumerate(perguntas_e_respostas, start=1)
@@ -216,7 +225,8 @@ def avaliar_respostas(
     prompt = (
         "Avalie cada resposta da entrevista abaixo.\n\n"
         f"Tipo de entrevista: {presentation_type or 'não informado'}\n"
-        f"O que esta modalidade espera: {regra}\n\n"
+        f"O que esta modalidade espera: {regra}\n"
+        f"{calibragem}\n"
         f"{RUBRICA}\n\n"
         f"{INSTRUCAO_DO_FEEDBACK}\n\n"
         + (f"{_instrucao_do_perfil()}\n\n" if com_perfil else "")
