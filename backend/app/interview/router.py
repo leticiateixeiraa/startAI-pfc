@@ -20,6 +20,7 @@ from app.interview.models import InterviewAnswer, InterviewSession
 from app.interview.schemas import (
     AnswerIn,
     InterviewHistoryOut,
+    InterviewStateOut,
     NextQuestionOut,
     StartInterviewIn,
     StartInterviewOut,
@@ -50,6 +51,7 @@ def history(
         InterviewHistoryOut(
             session_id=session.id,
             category=session.category,
+            job_title=session.job_title,
             presentation_type=session.presentation_type,
             seniority=session.seniority,
             finished=session.finished,
@@ -61,6 +63,36 @@ def history(
         )
         for session in sessions
     ]
+
+
+@router.get("/{session_id}", response_model=InterviewStateOut)
+def state(
+    session_id: uuid.UUID,
+    user_id: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """feat(interview-resume): estado da entrevista para retomar depois.
+
+    Cada resposta já é gravada ao ser enviada (POST /answer), junto com a
+    próxima pergunta. Por isso sair no meio não perde nada: este endpoint só
+    devolve a pergunta pendente e o progresso, e o aluno continua dali.
+    """
+    session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessão de entrevista não encontrada")
+    if str(session.user_id) != user_id:
+        raise HTTPException(status_code=403, detail="Essa sessão não pertence ao usuário autenticado")
+
+    return InterviewStateOut(
+        session_id=session.id,
+        job_title=session.job_title,
+        presentation_type=session.presentation_type,
+        seniority=session.seniority,
+        finished=session.finished,
+        current_question=None if session.finished else session.current_question_text,
+        answered_count=db.query(InterviewAnswer).filter(InterviewAnswer.session_id == session.id).count(),
+        total_questions=service.total_questions(db, session),
+    )
 
 
 @router.post("/mock-start", response_model=StartInterviewOut, status_code=status.HTTP_201_CREATED)

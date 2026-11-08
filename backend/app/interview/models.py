@@ -35,6 +35,8 @@ class InterviewSession(Base):
     # Nível da vaga (estagio, junior, pleno, senior); None em sessões antigas
     # e nas do mock-start. Calibra perguntas, adaptação e avaliação.
     seniority = Column(String(20), nullable=True)
+    # Cargo informado no formulário; usado para retomar a entrevista depois.
+    job_title = Column(String(160), nullable=True)
 
     # Índice da próxima pergunta "fixa" do banco (QUESTION_BANK) a ser usada
     # quando não há adaptação. Não avança quando uma pergunta adaptada é
