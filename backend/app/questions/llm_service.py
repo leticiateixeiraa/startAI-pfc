@@ -17,10 +17,16 @@ class LLMGenerationError(RuntimeError):
 TEMPORARY_GEMINI_ERRORS = {429, 500, 502, 503, 504}
 
 
-def _generate_content(client, model: str, prompt: str, system_instruction: str):
+def _generate_content(
+    client,
+    model: str,
+    prompt: str,
+    system_instruction: str,
+    temperature: float = 0.7,
+):
     config = types.GenerateContentConfig(
         system_instruction=system_instruction,
-        temperature=0.7,
+        temperature=temperature,
         response_mime_type="application/json",
     )
     for attempt in range(3):
@@ -86,7 +92,7 @@ def generate_questions(
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise LLMGenerationError(
-            "GEMINI_API_KEY não configurada. Adicione uma chave do Gemini no arquivo backend/.env."
+            "GEMINI_API_KEY não configurada. Adicione uma chave do Gemini no arquivo .env da raiz do projeto."
         )
 
     model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
@@ -142,7 +148,7 @@ def generate_adapted_question(
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         raise LLMGenerationError(
-            "GEMINI_API_KEY não configurada. Adicione uma chave do Gemini no arquivo backend/.env."
+            "GEMINI_API_KEY não configurada. Adicione uma chave do Gemini no arquivo .env da raiz do projeto."
         )
 
     model = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")

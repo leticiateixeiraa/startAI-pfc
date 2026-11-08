@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
+from app.evaluation.models import InterviewEvaluation
 from app.interview import service
 from app.interview.models import InterviewAnswer, InterviewSession
 from app.interview.schemas import (
@@ -40,6 +41,11 @@ def history(
         .order_by(InterviewSession.created_at.desc())
         .all()
     )
+    notas = dict(
+        db.query(InterviewEvaluation.session_id, InterviewEvaluation.overall_score)
+        .filter(InterviewEvaluation.user_id == uuid.UUID(user_id))
+        .all()
+    )
     return [
         InterviewHistoryOut(
             session_id=session.id,
@@ -50,6 +56,7 @@ def history(
             .filter(InterviewAnswer.session_id == session.id)
             .count(),
             created_at=session.created_at,
+            overall_score=notas.get(session.id),
         )
         for session in sessions
     ]
