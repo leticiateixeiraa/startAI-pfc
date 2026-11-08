@@ -13,11 +13,13 @@ from datetime import datetime, timedelta, timezone
 from jose import jwt
 from passlib.context import CryptContext
 
+from app import config  # noqa: F401  (carrega o .env antes de ler as variáveis)
+
 SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 if not SECRET_KEY or SECRET_KEY == "troque-por-uma-chave-secreta-forte":
     raise RuntimeError(
-        "JWT_SECRET_KEY não configurada. Gere uma com: "
-        'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+        "JWT_SECRET_KEY não configurada. Rode `python scripts/configurar_env.py` "
+        "na raiz do projeto, que gera a chave automaticamente."
     )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 24))

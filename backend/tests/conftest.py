@@ -26,6 +26,13 @@ from datetime import datetime, timezone
 # máquina nunca seja usado pelos testes.
 os.environ["DATABASE_URL"] = "sqlite://"
 os.environ["JWT_SECRET_KEY"] = "chave-exclusiva-dos-testes-automatizados"
+# SMTP sempre "não configurado" nos testes, mesmo que o .env da máquina
+# tenha um e-mail de verdade. Sem isso, o teste que espera 502 por falta de
+# SMTP recebia 500 em quem configurou o e-mail (o envio real é bloqueado
+# abaixo, em `sem_servicos_externos`). String vazia, e não delete, para o
+# load_dotenv do app/config.py não preencher de novo a partir do .env.
+for _variavel in ("SMTP_HOST", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM"):
+    os.environ[_variavel] = ""
 
 import pytest  # noqa: E402
 from sqlalchemy import DateTime, create_engine, event, inspect  # noqa: E402

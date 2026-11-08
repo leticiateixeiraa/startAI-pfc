@@ -71,8 +71,8 @@ repetir perguntas já feitas.
 
 ## Configuração
 
-A integração depende de duas variáveis de ambiente, definidas no `.env` do
-backend (nunca no código-fonte):
+A integração depende de duas variáveis de ambiente, definidas no `.env` da
+raiz do projeto (nunca no código-fonte):
 
 | Variável | Obrigatória | Padrão | Descrição |
 |---|---|---|---|
