@@ -15,6 +15,7 @@ from app.audit.router import router as audit_router
 from app.roadmap.router import router as roadmap_router
 from app.admin.router import router as admin_router
 from app.evaluation.router import router as evaluation_router
+from app.behavioral.router import router as behavioral_router
 from app.onboarding.router import router as onboarding_router
 
 
@@ -37,6 +38,7 @@ app.include_router(audit_router)
 app.include_router(roadmap_router)
 app.include_router(admin_router)
 app.include_router(evaluation_router)
+app.include_router(behavioral_router)
 app.include_router(onboarding_router)
 
 
@@ -73,6 +75,25 @@ def on_startup():
             connection.execute(
                 text("ALTER TABLE users ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE")
             )
+
+    # feat(feedback): compatibilidade com avaliações gravadas antes dos erros
+    # apontados, da resposta sugerida e dos destaques gerais.
+    novas_colunas = {
+        "interview_evaluations": {
+            "highlights": "TEXT NOT NULL DEFAULT '[]'",
+            "next_steps": "TEXT NOT NULL DEFAULT '[]'",
+        },
+        "answer_evaluations": {
+            "mistakes": "TEXT NOT NULL DEFAULT '[]'",
+            "suggested_answer": "TEXT",
+        },
+    }
+    with engine.begin() as connection:
+        for tabela, colunas in novas_colunas.items():
+            existentes = {column["name"] for column in inspect(engine).get_columns(tabela)}
+            for coluna, definicao in colunas.items():
+                if coluna not in existentes:
+                    connection.execute(text(f"ALTER TABLE {tabela} ADD COLUMN {coluna} {definicao}"))
 
 
 @app.get("/health")
