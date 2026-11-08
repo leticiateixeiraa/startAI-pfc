@@ -32,6 +32,10 @@ services:
         value: "1440"
       - key: GEMINI_API_KEY
         sync: false
+      - key: JOOBLE_API_KEY
+        sync: false
+      - key: JOOBLE_API_URL
+        value: https://br.jooble.org/api/
       - key: GEMINI_MODEL
         value: gemini-3.6-flash
       # URL do frontend na Vercel, ex.: https://startai.vercel.app

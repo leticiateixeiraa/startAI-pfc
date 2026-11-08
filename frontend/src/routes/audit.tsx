@@ -17,6 +17,7 @@ const actionLabels: Record<string, string> = {
   "interview.started": "Entrevista iniciada",
   "interview.answer_submitted": "Resposta enviada",
   "interview.evaluated": "Entrevista avaliada pela IA",
+  "jobs.recommended": "Vagas recomendadas",
   "roadmap.created": "Roadmap criado",
   "roadmap.item_updated": "Etapa atualizada",
 };

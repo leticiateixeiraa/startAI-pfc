@@ -19,6 +19,7 @@ from app.evaluation.router import router as evaluation_router
 from app.behavioral.router import router as behavioral_router
 from app.onboarding.router import router as onboarding_router
 from app.speech.router import router as speech_router
+from app.jobs.router import router as jobs_router
 
 
 app = FastAPI(title="StartAI API")
@@ -44,6 +45,7 @@ app.include_router(evaluation_router)
 app.include_router(behavioral_router)
 app.include_router(onboarding_router)
 app.include_router(speech_router)
+app.include_router(jobs_router)
 
 
 @app.on_event("startup")

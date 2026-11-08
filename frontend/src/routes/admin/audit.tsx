@@ -32,6 +32,7 @@ const ACTION_LABELS: Record<string, string> = {
   "admin.role_revoked": "Papel de admin removido",
   "admin.audit_viewed": "Auditoria geral consultada",
   "interview.evaluated": "Entrevista avaliada pela IA",
+  "jobs.recommended": "Vagas recomendadas",
   "admin.user_deleted": "Conta excluída pelo admin (LGPD)",
   "lgpd.account_deleted": "Conta excluída pelo titular (LGPD)",
 };
