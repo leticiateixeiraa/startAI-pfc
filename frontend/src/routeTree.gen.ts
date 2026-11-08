@@ -14,6 +14,7 @@ import { Route as AuditRouteImport } from './routes/audit'
 import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -48,6 +49,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/conta': typeof ContaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/conta': typeof ContaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/conta': typeof ContaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
+  '/onboarding': typeof OnboardingRoute
   '/privacidade': typeof PrivacidadeRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/conta'
     | '/forgot-password'
     | '/home'
+    | '/onboarding'
     | '/privacidade'
     | '/register'
     | '/reset-password'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/conta'
     | '/forgot-password'
     | '/home'
+    | '/onboarding'
     | '/privacidade'
     | '/register'
     | '/reset-password'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/conta'
     | '/forgot-password'
     | '/home'
+    | '/onboarding'
     | '/privacidade'
     | '/register'
     | '/reset-password'
@@ -213,6 +225,7 @@ export interface RootRouteChildren {
   ContaRoute: typeof ContaRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeRoute: typeof HomeRoute
+  OnboardingRoute: typeof OnboardingRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacidade': {
@@ -341,6 +361,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContaRoute: ContaRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeRoute: HomeRoute,
+  OnboardingRoute: OnboardingRoute,
   PrivacidadeRoute: PrivacidadeRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,

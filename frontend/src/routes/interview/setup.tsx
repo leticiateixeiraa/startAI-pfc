@@ -7,6 +7,10 @@ import { saveInterviewSession } from "@/services/interviewSession";
 import type { InterviewRequest } from "@/types/interview";
 
 export const Route = createFileRoute("/interview/setup")({
+  // feat(onboarding): o resultado do questionário pode trazer o cargo sugerido.
+  validateSearch: (busca: Record<string, unknown>): { cargo?: string } => ({
+    cargo: typeof busca.cargo === "string" ? busca.cargo : undefined,
+  }),
   beforeLoad: () => {
     if (!localStorage.getItem("access_token")) {
       throw redirect({ to: "/" });
@@ -33,6 +37,7 @@ export const Route = createFileRoute("/interview/setup")({
 
 function InterviewSetupPage() {
   const navigate = useNavigate();
+  const { cargo } = Route.useSearch();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [lastValues, setLastValues] = useState<InterviewFormValues | null>(null);
@@ -94,7 +99,11 @@ function InterviewSetupPage() {
             </button>
           </div>
         ) : (
-          <InterviewForm isSubmitting={isSubmitting} onSubmit={generateInterview} />
+          <InterviewForm
+            isSubmitting={isSubmitting}
+            onSubmit={generateInterview}
+            initialJobTitle={cargo}
+          />
         )}
       </div>
     </main>
