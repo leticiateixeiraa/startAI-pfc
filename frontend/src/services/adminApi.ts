@@ -55,6 +55,11 @@ export async function setUserActive(userId: string, isActive: boolean): Promise<
   return data;
 }
 
+// feat(lgpd): exclusão definitiva da conta, para atender pedido do titular.
+export async function deleteUser(userId: string): Promise<void> {
+  await api.delete(`/admin/users/${userId}`);
+}
+
 export async function listAdminAuditLogs(filters: AdminAuditFilters): Promise<AuditLog[]> {
   const params = Object.fromEntries(
     Object.entries(filters).filter(([, value]) => value !== undefined && value !== ""),

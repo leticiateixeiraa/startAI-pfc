@@ -18,6 +18,8 @@ from app.audit.schemas import AuditLogOut
 from app.audit.service import record_event
 from app.auth.dependencies import require_admin
 from app.auth.models import User
+from app.auth.schemas import ROLE_ADMIN
+from app.lgpd.service import excluir_conta
 from app.models.base import get_db
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -64,6 +66,45 @@ def update_user_status(
     db.commit()
     db.refresh(user)
     return service.user_summary(db, user)
+
+
+@router.delete("/users/{user_id}")
+def delete_user(
+    user_id: uuid.UUID,
+    request: Request,
+    admin_id: str = Depends(require_admin),
+    db: Session = Depends(get_db),
+):
+    """feat(lgpd): exclusão definitiva de uma conta, para atender um pedido
+    do titular (ex.: recebido por e-mail). Regras em app/lgpd/service.py."""
+    if str(user_id) == admin_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Para excluir a sua própria conta, use a página Minha conta",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    if user.role == ROLE_ADMIN:
+        raise HTTPException(
+            status_code=400,
+            detail="Contas de administrador não podem ser excluídas pelo painel. Revogue o papel antes.",
+        )
+
+    resumo = excluir_conta(db, user)
+    # O admin que excluiu fica registrado; o id do usuário excluído não.
+    record_event(
+        db,
+        "admin.user_deleted",
+        uuid.UUID(admin_id),
+        "user",
+        None,
+        resumo,
+        ip_address=_client_ip(request),
+    )
+    db.commit()
+    return {"message": "Conta e dados excluídos com sucesso.", "deleted": resumo}
 
 
 @router.get("/audit/logs", response_model=list[AuditLogOut])

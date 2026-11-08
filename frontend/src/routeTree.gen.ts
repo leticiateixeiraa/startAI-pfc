@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuditRouteImport } from './routes/audit'
+import { Route as ContaRouteImport } from './routes/conta'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
@@ -32,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuditRoute = AuditRouteImport.update({
   id: '/audit',
   path: '/audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContaRoute = ContaRouteImport.update({
+  id: '/conta',
+  path: '/conta',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -98,6 +104,7 @@ const InterviewSetupRoute = InterviewSetupRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/conta': typeof ContaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/conta': typeof ContaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/audit': typeof AuditRoute
+  '/conta': typeof ContaRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/home': typeof HomeRoute
   '/privacidade': typeof PrivacidadeRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/audit'
+    | '/conta'
     | '/forgot-password'
     | '/home'
     | '/privacidade'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/audit'
+    | '/conta'
     | '/forgot-password'
     | '/home'
     | '/privacidade'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/audit'
+    | '/conta'
     | '/forgot-password'
     | '/home'
     | '/privacidade'
@@ -198,6 +210,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuditRoute: typeof AuditRoute
+  ContaRoute: typeof ContaRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HomeRoute: typeof HomeRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
@@ -226,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/audit'
       fullPath: '/audit'
       preLoaderRoute: typeof AuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conta': {
+      id: '/conta'
+      path: '/conta'
+      fullPath: '/conta'
+      preLoaderRoute: typeof ContaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -318,6 +338,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuditRoute: AuditRoute,
+  ContaRoute: ContaRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HomeRoute: HomeRoute,
   PrivacidadeRoute: PrivacidadeRoute,

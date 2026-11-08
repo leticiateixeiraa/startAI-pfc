@@ -2,6 +2,7 @@
 feat(auth-backend): implementa endpoint POST /auth/register
 feat(auth-backend): implementa endpoint POST /auth/login com JWT
 feat(auth-backend): implementa endpoint GET /auth/me
+feat(lgpd): implementa endpoint DELETE /auth/me (exclusão da conta pelo titular)
 """
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -14,6 +15,7 @@ from app.models.base import get_db
 from app.auth.dependencies import get_current_user
 from app.auth.models import PasswordResetToken, User
 from app.auth.schemas import (
+    DeleteAccountRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
     Token,
@@ -31,6 +33,7 @@ from app.auth.service import (
 )
 from app.auth.email_service import ErroEnvioEmail, enviar_email_redefinicao_senha
 from app.audit.service import record_event
+from app.lgpd.service import ExclusaoNaoPermitida, excluir_conta
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -123,6 +126,32 @@ def me(user_id: str = Depends(get_current_user), db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     return user
+
+
+@router.delete("/me")
+def excluir_minha_conta(
+    payload: DeleteAccountRequest,
+    request: Request,
+    user_id: str = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """feat(lgpd): o titular exclui a própria conta e os dados (Art. 18, VI)."""
+    user = db.query(User).filter(User.id == uuid.UUID(user_id)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    # 400 e não 401: o front trata 401 como "sessão expirada" e desloga.
+    if not verificar_senha(payload.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Senha incorreta")
+
+    try:
+        resumo = excluir_conta(db, user)
+    except ExclusaoNaoPermitida as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    # Depois da exclusão não existe mais a quem vincular o evento, nem IP.
+    record_event(db, "lgpd.account_deleted", None, "user", None, {"by": "titular", **resumo})
+    db.commit()
+    return {"message": "Conta e dados excluídos com sucesso."}
 
 
 @router.post("/forgot-password")

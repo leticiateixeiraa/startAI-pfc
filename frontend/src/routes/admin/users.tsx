@@ -1,10 +1,11 @@
 // feat(admin): lista de usuários com busca e ativação/desativação de contas.
+// feat(lgpd): exclusão definitiva de conta, para atender pedido do titular.
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { AdminLayout, ErrorBox, LoadingBox } from "@/components/admin/AdminLayout";
 import { requireAdminBeforeLoad } from "@/components/admin/adminGuard";
 import { getErrorMessage } from "@/services/api";
-import { listAdminUsers, setUserActive, type AdminUser } from "@/services/adminApi";
+import { deleteUser, listAdminUsers, setUserActive, type AdminUser } from "@/services/adminApi";
 
 export const Route = createFileRoute("/admin/users")({
   beforeLoad: requireAdminBeforeLoad,
@@ -19,6 +20,7 @@ function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
   async function load(term = search) {
     setIsLoading(true);
@@ -57,10 +59,31 @@ function AdminUsersPage() {
     }
   }
 
+  async function remove(user: AdminUser) {
+    const ok = window.confirm(
+      `Excluir DEFINITIVAMENTE a conta de ${user.email}?\n\n` +
+        "Cadastro, entrevistas, respostas e avaliações serão apagados e não poderão ser recuperados. " +
+        "Use apenas para atender um pedido de exclusão do próprio usuário (LGPD).",
+    );
+    if (!ok) return;
+    setPendingId(user.id);
+    setActionError(null);
+    setMessage(null);
+    try {
+      await deleteUser(user.id);
+      setUsers((current) => current.filter((item) => item.id !== user.id));
+      setMessage(`A conta de ${user.email} e os dados dela foram excluídos.`);
+    } catch (err) {
+      setActionError(getErrorMessage(err, "Não foi possível excluir a conta."));
+    } finally {
+      setPendingId(null);
+    }
+  }
+
   return (
     <AdminLayout
       title="Usuários"
-      description="Contas cadastradas. Uma conta desativada perde o acesso na hora e não consegue entrar de novo."
+      description="Contas cadastradas. Desativar bloqueia o acesso e mantém os dados; excluir apaga a conta e os dados de forma definitiva (LGPD)."
     >
       <form onSubmit={handleSearch} className="mb-4 flex flex-wrap gap-2">
         <input
@@ -77,6 +100,7 @@ function AdminUsersPage() {
       </form>
 
       {actionError && <p className="mb-4 text-sm text-destructive">{actionError}</p>}
+      {message && <p className="mb-4 text-sm text-primary" role="status">{message}</p>}
       {error && <ErrorBox message={error} onRetry={() => void load()} />}
       {!error && isLoading && <LoadingBox text="Carregando usuários..." />}
       {!error && !isLoading && users.length === 0 && <LoadingBox text="Nenhum usuário encontrado." />}
@@ -116,14 +140,24 @@ function AdminUsersPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     {user.role !== "admin" && (
-                      <button
-                        type="button"
-                        disabled={pendingId === user.id}
-                        onClick={() => void toggle(user)}
-                        className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-50"
-                      >
-                        {user.is_active ? "Desativar" : "Reativar"}
-                      </button>
+                      <div className="flex justify-end gap-2">
+                        <button
+                          type="button"
+                          disabled={pendingId === user.id}
+                          onClick={() => void toggle(user)}
+                          className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-accent disabled:opacity-50"
+                        >
+                          {user.is_active ? "Desativar" : "Reativar"}
+                        </button>
+                        <button
+                          type="button"
+                          disabled={pendingId === user.id}
+                          onClick={() => void remove(user)}
+                          className="rounded-lg border border-destructive/40 px-3 py-1.5 text-xs font-semibold text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                        >
+                          Excluir
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>

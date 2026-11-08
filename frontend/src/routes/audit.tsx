@@ -16,6 +16,7 @@ const actionLabels: Record<string, string> = {
   "auth.login": "Login realizado",
   "interview.started": "Entrevista iniciada",
   "interview.answer_submitted": "Resposta enviada",
+  "interview.evaluated": "Entrevista avaliada pela IA",
   "roadmap.created": "Roadmap criado",
   "roadmap.item_updated": "Etapa atualizada",
 };

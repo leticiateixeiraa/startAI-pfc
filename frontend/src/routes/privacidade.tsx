@@ -158,8 +158,9 @@ function PrivacyPage() {
             <h2 className="text-base font-semibold text-foreground">6. Armazenamento e retenção</h2>
             <p className="mt-2">
               Dados de cadastro e histórico são mantidos enquanto a conta estiver ativa. Logs de
-              auditoria são mantidos pelo prazo necessário à segurança. Após a exclusão da conta,
-              os dados pessoais são removidos ou anonimizados em prazo razoável, ressalvadas
+              auditoria são mantidos pelo prazo necessário à segurança. Ao excluir a conta, o cadastro,
+              as entrevistas, as respostas e as avaliações são apagados na hora, e os registros de
+              auditoria são anonimizados (sem vínculo com o usuário nem endereço IP), ressalvadas
               hipóteses de guarda obrigatória por lei.
             </p>
           </section>
@@ -176,6 +177,10 @@ function PrivacyPage() {
               <li>revogação do consentimento a qualquer momento;</li>
               <li>informação sobre com quem os dados foram compartilhados.</li>
             </ul>
+            <p className="mt-2">
+              A eliminação da conta e dos dados pode ser feita diretamente por você, a qualquer
+              momento, na página <strong>Minha conta</strong>.
+            </p>
           </section>
 
           <section>
