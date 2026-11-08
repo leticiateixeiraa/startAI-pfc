@@ -31,6 +31,9 @@ const ACTION_LABELS: Record<string, string> = {
   "admin.role_granted": "Papel de admin concedido",
   "admin.role_revoked": "Papel de admin removido",
   "admin.audit_viewed": "Auditoria geral consultada",
+  "interview.evaluated": "Entrevista avaliada pela IA",
+  "admin.user_deleted": "Conta excluída pelo admin (LGPD)",
+  "lgpd.account_deleted": "Conta excluída pelo titular (LGPD)",
 };
 
 const EMPTY_FILTERS: AdminAuditFilters = { user_id: "", action: "", date_from: "", date_to: "" };

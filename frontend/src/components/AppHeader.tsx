@@ -9,6 +9,7 @@ const BASE_NAV_ITEMS = [
   { to: "/home", label: "Início" },
   { to: "/interview/setup", label: "Nova entrevista" },
   { to: "/audit", label: "Auditoria" },
+  { to: "/conta", label: "Minha conta" },
 ] as const;
 
 // feat(admin): link exibido só para administradores (o back-end também confere).

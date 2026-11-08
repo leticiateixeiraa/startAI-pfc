@@ -73,6 +73,14 @@ export function logout() {
   localStorage.removeItem(ROLE_KEY);
 }
 
+// feat(lgpd): exclui a conta e todos os dados (DELETE /auth/me). A senha é
+// pedida de novo como confirmação. Depois de excluir, encerra a sessão local.
+export async function excluirMinhaConta(senha: string) {
+  const { data } = await api.delete("/auth/me", { data: { password: senha } });
+  logout();
+  return data;
+}
+
 export function isAuthenticated(): boolean {
   return Boolean(localStorage.getItem("access_token"));
 }
