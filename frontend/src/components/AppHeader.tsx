@@ -9,6 +9,7 @@ const BASE_NAV_ITEMS = [
   { to: "/home", label: "Início" },
   { to: "/interview/setup", label: "Nova entrevista" },
   { to: "/perfil", label: "Meu perfil" },
+  { to: "/vagas", label: "Vagas" },
   { to: "/audit", label: "Auditoria" },
   { to: "/conta", label: "Minha conta" },
 ] as const;
