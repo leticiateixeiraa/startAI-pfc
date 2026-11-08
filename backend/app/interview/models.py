@@ -18,7 +18,7 @@ Quando o módulo `questions` estiver pronto:
 """
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
@@ -70,4 +70,8 @@ class InterviewAnswer(Base):
     order_index = Column(Integer, nullable=False)
     question_text = Column(Text, nullable=False)
     answer_text = Column(Text, nullable=False)
+    # feat(speech): "text" (digitada) ou "voice" (transcrita do áudio). A duração
+    # só existe nas respostas por voz e alimenta o analisador de oratória.
+    input_mode = Column(String(10), nullable=False, default="text")
+    audio_duration_seconds = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

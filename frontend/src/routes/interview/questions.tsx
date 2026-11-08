@@ -6,8 +6,17 @@ import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-ro
 import { useCallback, useEffect, useState } from "react";
 import { ErrorState } from "@/components/interview/ErrorState";
 import { ProgressIndicator } from "@/components/interview/ProgressIndicator";
+import { QuestionAudio } from "@/components/interview/QuestionAudio";
 import { QuestionCard } from "@/components/interview/QuestionCard";
-import { ApiError, getInterviewState, submitAnswer, type InterviewState } from "@/services/interviewApi";
+import { VoiceRecorder } from "@/components/interview/VoiceRecorder";
+import { cancelSpeech } from "@/lib/speech";
+import {
+  ApiError,
+  getInterviewState,
+  submitAnswer,
+  transcribeAudio,
+  type InterviewState,
+} from "@/services/interviewApi";
 import { presentationTypeLabel, seniorityLabel } from "@/types/interview";
 
 export const Route = createFileRoute("/interview/questions")({
@@ -66,6 +75,9 @@ function InterviewQuestionsPage() {
   const [answer, setAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Soma da duração dos áudios transcritos nesta resposta; null = digitada.
+  // Será usada pelo analisador de oratória (palavras por minuto).
+  const [voiceSeconds, setVoiceSeconds] = useState<number | null>(null);
 
   const goToResult = useCallback(() => {
     writeDraft(sessionId, "");
@@ -142,6 +154,15 @@ function InterviewQuestionsPage() {
   function handleAnswerChange(text: string) {
     setAnswer(text);
     writeDraft(sessionId, text);
+    if (!text.trim()) setVoiceSeconds(null);
+  }
+
+  // Texto transcrito entra na caixa de resposta, onde pode ser revisado e
+  // corrigido antes do envio. Várias gravações seguidas se somam.
+  async function handleAudioReady(wav: Blob, durationSeconds: number) {
+    const result = await transcribeAudio(sessionId, wav, durationSeconds);
+    handleAnswerChange(answer.trim() ? `${answer.trim()} ${result.transcript}` : result.transcript);
+    setVoiceSeconds((current) => (current ?? 0) + (result.duration_seconds ?? durationSeconds));
   }
 
   async function handleAnswer() {
@@ -150,7 +171,11 @@ function InterviewQuestionsPage() {
     setErrorMessage(null);
 
     try {
-      const result = await submitAnswer(sessionId, answer.trim());
+      const result = await submitAnswer(
+        sessionId,
+        answer.trim(),
+        voiceSeconds !== null ? { durationSeconds: voiceSeconds } : undefined,
+      );
       if (result.finished || !result.question) {
         goToResult();
         return;
@@ -188,17 +213,27 @@ function InterviewQuestionsPage() {
         <div className="flex flex-1 items-center justify-center">
           <QuestionCard questionText={state.current_question} />
         </div>
+        <QuestionAudio text={state.current_question} />
 
         <label className="mt-8 flex flex-col gap-2 text-sm font-medium text-card-foreground">
           Sua resposta
           <textarea
             value={answer}
             onChange={(event) => handleAnswerChange(event.target.value)}
-            placeholder="Escreva sua resposta com detalhes..."
+            placeholder="Escreva sua resposta ou use o botão de voz abaixo..."
             rows={5}
             className="resize-none rounded-lg border border-input bg-card px-3 py-3 font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </label>
+
+        <div className="mt-3">
+          <VoiceRecorder disabled={isSubmitting} onAudioReady={handleAudioReady} onStart={cancelSpeech} />
+          {voiceSeconds !== null && (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Texto transcrito do seu áudio. Revise e corrija o que for preciso antes de enviar.
+            </p>
+          )}
+        </div>
 
         {errorMessage && <p className="mt-3 text-sm text-destructive" role="alert">{errorMessage}</p>}
 

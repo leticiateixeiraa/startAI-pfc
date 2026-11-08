@@ -18,6 +18,7 @@ from app.admin.router import router as admin_router
 from app.evaluation.router import router as evaluation_router
 from app.behavioral.router import router as behavioral_router
 from app.onboarding.router import router as onboarding_router
+from app.speech.router import router as speech_router
 
 
 app = FastAPI(title="StartAI API")
@@ -42,6 +43,7 @@ app.include_router(admin_router)
 app.include_router(evaluation_router)
 app.include_router(behavioral_router)
 app.include_router(onboarding_router)
+app.include_router(speech_router)
 
 
 @app.on_event("startup")
@@ -55,6 +57,18 @@ def on_startup():
         with engine.begin() as connection:
             connection.execute(
                 text("ALTER TABLE interview_sessions ADD COLUMN presentation_type VARCHAR")
+            )
+
+    # feat(speech): compatibilidade com bancos criados antes das respostas por voz.
+    answer_columns = {column["name"] for column in inspect(engine).get_columns("interview_answers")}
+    with engine.begin() as connection:
+        if "input_mode" not in answer_columns:
+            connection.execute(
+                text("ALTER TABLE interview_answers ADD COLUMN input_mode VARCHAR(10) NOT NULL DEFAULT 'text'")
+            )
+        if "audio_duration_seconds" not in answer_columns:
+            connection.execute(
+                text("ALTER TABLE interview_answers ADD COLUMN audio_duration_seconds DOUBLE PRECISION")
             )
 
     # feat(lgpd): compatibilidade com bancos criados antes do registro de consentimento.

@@ -11,3 +11,4 @@ pytest
 httpx
 google-genai
 tzdata
+python-multipart
