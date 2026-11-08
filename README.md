@@ -95,7 +95,7 @@ Desenvolvimento conduzido com **Scrum** (SCHWABER; SUTHERLAND, 2020), com gestã
 
 ## Privacidade e LGPD
 
-O sistema trata dados pessoais do usuário (cadastro, áudio das respostas, transcrições e métricas de oratória). Os áudios são descartados após a transcrição, as senhas são armazenadas com criptografia (bcrypt) e o usuário pode excluir seu histórico a qualquer momento.
+O sistema trata dados pessoais do usuário (cadastro, áudio das respostas, transcrições e métricas de oratória). Os áudios são descartados após a transcrição, as senhas são armazenadas com criptografia (bcrypt) e o usuário pode excluir a própria conta e todos os dados a qualquer momento, na página **Minha conta**.
 
 ## Auditoria e logs
 
@@ -142,6 +142,33 @@ o papel é concedido por quem tem acesso ao servidor, na pasta `backend/`:
 python -m app.scripts.promote_admin email@exemplo.com          # torna admin
 python -m app.scripts.promote_admin email@exemplo.com --revoke # remove
 ```
+
+## Exclusão de conta (LGPD)
+
+O direito de eliminação dos dados (LGPD, Art. 18, VI) pode ser exercido de
+dois jeitos, com a mesma regra (`app/lgpd/service.py`):
+
+- **Pelo próprio usuário**, na página **Minha conta** (`DELETE /auth/me`),
+  digitando a senha de novo para confirmar;
+- **Pelo administrador**, em Administração > Usuários
+  (`DELETE /admin/users/{id}`), para atender um pedido recebido por outro
+  canal. O admin não exclui a si mesmo nem outro administrador.
+
+O que acontece na exclusão:
+
+- **São apagados** o cadastro, as entrevistas (sessões, perguntas e
+  respostas), as avaliações da IA, as trilhas de estudo e os tokens de
+  redefinição de senha;
+- **A auditoria é anonimizada, e não apagada:** o vínculo com a pessoa
+  (`user_id`) e o IP são removidos, mas o registro do evento continua, para
+  fins de segurança (legítimo interesse);
+- Tudo ocorre em **uma única transação**: se algo falhar, nada é apagado;
+- A exclusão fica registrada como `lgpd.account_deleted` (pelo titular) ou
+  `admin.user_deleted` (pelo admin), sem dados pessoais;
+- O último administrador ativo não pode excluir a própria conta.
+
+Diferença para **desativar**: a conta desativada perde o acesso, mas os dados
+continuam no banco e podem ser reativados.
 
 ## Avaliação das respostas por IA
 
