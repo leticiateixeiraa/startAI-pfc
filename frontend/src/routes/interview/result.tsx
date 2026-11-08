@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ErrorState } from "@/components/interview/ErrorState";
 import { CompetencyRadar, ScoreBars } from "@/components/profile/ProfileCharts";
 import { getErrorMessage } from "@/services/api";
+import { seniorityLabel } from "@/types/interview";
 import {
   CRITERIA_LABELS,
   loadEvaluation,
@@ -260,6 +261,11 @@ function InterviewResultPage() {
                 <p className="mt-1 text-sm font-semibold text-muted-foreground">
                   {scoreLabel(evaluation.overall_score)}
                 </p>
+                {evaluation.seniority && (
+                  <p className="mt-2 inline-block rounded-full bg-secondary px-2.5 py-1 text-xs font-bold text-secondary-foreground">
+                    Avaliada para o nível {seniorityLabel(evaluation.seniority)}
+                  </p>
+                )}
               </div>
               <div className="sm:border-l sm:border-border sm:pl-6">
                 <h2 className="text-base font-semibold text-card-foreground">Resumo geral</h2>

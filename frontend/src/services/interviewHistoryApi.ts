@@ -4,6 +4,7 @@ export type InterviewHistoryItem = {
   session_id: string;
   category: string;
   presentation_type: string | null;
+  seniority: string | null;
   finished: boolean;
   answered_count: number;
   created_at: string;

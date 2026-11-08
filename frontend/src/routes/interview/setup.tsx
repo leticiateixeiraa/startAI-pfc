@@ -50,6 +50,7 @@ function InterviewSetupPage() {
     const request: InterviewRequest = {
       job_title: values.jobTitle,
       presentation_type: values.presentationType,
+      seniority: values.seniority,
       ...(values.jobDescription ? { job_description: values.jobDescription } : {}),
     };
 

@@ -45,6 +45,7 @@ export type BehavioralProfile = {
 export type InterviewEvaluation = {
   session_id: string;
   presentation_type: string | null;
+  seniority: string | null;
   overall_score: number;
   summary: string;
   highlights: string[];
