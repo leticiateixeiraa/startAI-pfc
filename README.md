@@ -52,6 +52,8 @@ Escopo definido na Ficha de Caracterização do projeto. Situação em novembro/
 | 9 | Avaliação do conteúdo das respostas por IA (nota e feedback) | Letícia | ✅ Pronta |
 | 10 | Painel administrativo (usuários, auditoria geral e métricas) | Letícia | ✅ Pronta |
 
+**Além das 10 funcionalidades:** análise de currículo por IA, na página **Meu perfil** (veja [Análise de currículo](#análise-de-currículo)).
+
 **Fora do escopo:** análise de linguagem corporal por vídeo, candidatura a vagas diretamente pela plataforma e recursos de gamificação ou comparação social entre usuários.
 
 ## Arquitetura
@@ -60,7 +62,7 @@ O sistema segue o modelo cliente-servidor, dividido em camadas de apresentação
 
 - **Apresentação:** aplicação web em React, responsável pela interação com o usuário (gerenciamento das entrevistas, gravação de áudio, relatórios e evolução do desempenho).
 - **Processamento:** API REST em FastAPI, responsável pela autenticação, gerenciamento das entrevistas, transcrição, análise de oratória e integração com serviços externos de IA.
-- **Persistência:** PostgreSQL para dados relacionais; Redis para gerenciamento de tarefas assíncronas do processamento de áudio; armazenamento temporário para os arquivos de áudio.
+- **Persistência:** PostgreSQL para dados relacionais. O áudio das respostas é processado em memória e descartado logo após a transcrição: nenhum arquivo de áudio (nem de currículo) é armazenado. A transcrição roda de forma síncrona; Redis e filas assíncronas ficam como evolução futura.
 
 ## Tecnologias
 
@@ -69,8 +71,8 @@ O sistema segue o modelo cliente-servidor, dividido em camadas de apresentação
 | Front-end | React.js (TypeScript), Vite, TanStack Router/Start, TailwindCSS, shadcn/ui |
 | Back-end | Python, FastAPI |
 | Banco de dados | PostgreSQL, com SQLAlchemy (ORM) |
-| Filas / cache | Redis |
-| APIs de IA | Google Gemini (geração e adaptação de perguntas, avaliação das respostas e transcrição do áudio) |
+| Filas / cache | Redis (previsto para processamento assíncrono; não utilizado nesta versão) |
+| APIs de IA | Google Gemini (geração e adaptação de perguntas, avaliação das respostas, transcrição do áudio e análise de currículo) |
 | API de vagas | Jooble (vagas reais no Brasil, plano gratuito) |
 | Testes | Pytest (back-end); Jest / React Testing Library (front-end) |
 | Segurança | JWT, bcrypt |
@@ -96,14 +98,14 @@ Desenvolvimento conduzido com **Scrum** (SCHWABER; SUTHERLAND, 2020), com gestã
 
 ## Privacidade e LGPD
 
-O sistema trata dados pessoais do usuário (cadastro, áudio das respostas, transcrições e métricas de oratória). Os áudios são descartados após a transcrição, as senhas são armazenadas com criptografia (bcrypt) e o usuário pode excluir a própria conta e todos os dados a qualquer momento, na página **Minha conta**.
+O sistema trata dados pessoais do usuário (cadastro, áudio das respostas, transcrições, métricas de oratória e a análise do currículo). Os áudios e os arquivos de currículo são descartados após o processamento (só o texto transcrito e o resultado da análise ficam salvos), as senhas são armazenadas com criptografia (bcrypt) e o usuário pode excluir a própria conta e todos os dados a qualquer momento, na página **Minha conta**.
 
 ## Auditoria e logs
 
 O backend registra eventos relevantes na tabela `audit_logs`. Cada evento pode
 conter usuário, ação, recurso afetado, identificador do recurso, data/hora,
 endereço IP e detalhes adicionais em JSON serializado. São registrados eventos
-de autenticação, início e respostas de entrevistas e alterações no roadmap.
+de autenticação, início e respostas de entrevistas, transcrições de áudio (`interview.audio_transcribed`, só com duração e número de palavras), análises de currículo (`resume.analyzed`, só com tipo do arquivo e nota) e alterações no roadmap.
 
 O usuário autenticado consulta seus próprios eventos em `GET /audit/logs`, com
 os filtros `limit` e `action`. A consulta usa o identificador extraído do JWT,
@@ -200,7 +202,7 @@ O que acontece na exclusão:
 
 - **São apagados** o cadastro, as entrevistas (sessões, perguntas e
   respostas), as avaliações da IA, os perfis comportamentais, o questionário
-  de primeiro acesso, as trilhas de estudo, as vagas recomendadas e os tokens
+  de primeiro acesso, a análise de currículo, as trilhas de estudo, as vagas recomendadas e os tokens
   de redefinição de senha;
 - **A auditoria é anonimizada, e não apagada:** o vínculo com a pessoa
   (`user_id`) e o IP são removidos, mas o registro do evento continua, para
@@ -212,6 +214,48 @@ O que acontece na exclusão:
 
 Diferença para **desativar**: a conta desativada perde o acesso, mas os dados
 continuam no banco e podem ser reativados.
+
+## Resposta por voz
+
+Na tela de perguntas, o botão **Responder por voz** grava a resposta pelo
+microfone e a transcreve com o Gemini. O texto cai na caixa de resposta, onde
+a pessoa revisa e corrige antes de enviar. Também há o botão **Ouvir pergunta**
+(e a opção de ler cada pergunta automaticamente), que usa a síntese de voz do
+próprio navegador.
+
+- **Endpoint:** `POST /interviews/{id}/transcribe` (multipart, campo `audio`).
+  Devolve `transcript`, `duration_seconds` e `word_count`. Só o dono da sessão
+  acessa, e a sessão não pode estar finalizada.
+- **Formato:** o navegador converte a gravação (webm no Chrome, mp4 no Safari)
+  para WAV mono de 16 kHz antes de enviar, então o backend recebe sempre o mesmo
+  formato. Limites: 3 minutos de gravação e 10 MB por áudio.
+- **Transcrição literal:** hesitações e vícios de linguagem ("é", "né", "tipo")
+  são mantidos de propósito, para o analisador de oratória (#5).
+- **Dados salvos:** cada resposta guarda `input_mode` (`text` ou `voice`) e
+  `audio_duration_seconds`, que servem para calcular palavras por minuto.
+- **Privacidade:** o áudio é lido em memória e descartado após a transcrição; a
+  auditoria registra só duração e número de palavras.
+- **Requisitos:** `GEMINI_API_KEY` configurada; o microfone só funciona em
+  `localhost` ou em https.
+
+## Análise de currículo
+
+Em **Meu perfil**, o aluno anexa o currículo e a IA devolve uma análise. Não faz
+parte das 10 funcionalidades do escopo inicial.
+
+- **Endpoints:** `POST /resume/analyze` (multipart: `file` e `target_role`,
+  opcional), `GET /resume/me` (última análise ou `null`) e `DELETE /resume/me`.
+- **Arquivos:** PDF ou DOCX, até 5 MB. O tipo é conferido pelo conteúdo, não
+  pelo nome. PDF vai direto ao Gemini (inclusive digitalizado); do DOCX o
+  texto é extraído no servidor.
+- **O que a IA devolve:** nota de 0 a 10, quatro critérios (estrutura, clareza,
+  resultados e alinhamento com a vaga), pontos fortes, melhorias com sugestão
+  prática, habilidades encontradas e as que a vaga costuma pedir e não aparecem.
+- **Cuidados:** o conteúdo do currículo é tratado como dado, e ordens escritas
+  nele são ignoradas; idade, gênero, foto e estado civil não influenciam a nota.
+- **Privacidade:** o arquivo não é armazenado; fica só o resultado da análise
+  (uma por usuário, substituída a cada novo envio), apagado junto com a conta.
+  A auditoria guarda apenas o tipo do arquivo e a nota.
 
 ## Avaliação das respostas por IA
 
