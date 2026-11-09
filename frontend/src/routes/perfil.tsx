@@ -9,6 +9,7 @@ import {
   ScoreBars,
   formatScore,
 } from "@/components/profile/ProfileCharts";
+import { ResumeSection } from "@/components/profile/ResumeSection";
 import { getOnboardingStatus, type OnboardingStatus } from "@/services/onboardingApi";
 import { getBehavioralProfile, type ConsolidatedProfile } from "@/services/profileApi";
 import { listRoadmaps, roadmapProgress, type Roadmap } from "@/services/roadmapApi";
@@ -268,6 +269,7 @@ function ProfilePage() {
         {onboarding && profile && (
           <>
             <CareerAreaSection onboarding={onboarding} />
+            <ResumeSection suggestedRole={onboarding.result?.recommended_area.suggested_job_title} />
             <RoadmapsSection roadmaps={roadmaps} />
             <BehavioralSection profile={profile} />
           </>

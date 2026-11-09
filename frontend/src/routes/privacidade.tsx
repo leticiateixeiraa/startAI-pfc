@@ -24,6 +24,11 @@ const dataTable = [
     origin: "Fornecidos pelo usuário durante a simulação",
   },
   {
+    category: "Currículo",
+    data: "Nota, comentários e sugestões gerados pela IA sobre o currículo enviado (o arquivo em si não é armazenado)",
+    origin: "Fornecidos pelo usuário ao anexar o currículo em Meu perfil",
+  },
+  {
     category: "Métricas de oratória",
     data: "Duração da fala, palavras por minuto, repetições, vícios de linguagem",
     origin: "Calculados a partir do áudio/transcrição",
@@ -40,6 +45,11 @@ const thirdParties = [
     name: "Google (Gemini API)",
     shared: "Cargo/vaga, descrição da vaga, perguntas e respostas em texto",
     purpose: "Geração e adaptação de perguntas de entrevista por IA",
+  },
+  {
+    name: "Google (Gemini API) — currículo",
+    shared: "Arquivo do currículo (PDF) ou o texto extraído dele (DOCX), enviado apenas no momento da análise",
+    purpose: "Análise do currículo por IA, com nota e sugestões de melhoria",
   },
   {
     name: "Serviço de Speech-to-Text",
@@ -159,7 +169,7 @@ function PrivacyPage() {
             <p className="mt-2">
               Dados de cadastro e histórico são mantidos enquanto a conta estiver ativa. Logs de
               auditoria são mantidos pelo prazo necessário à segurança. Ao excluir a conta, o cadastro,
-              as entrevistas, as respostas e as avaliações são apagados na hora, e os registros de
+              as entrevistas, as respostas, as avaliações e a análise do currículo são apagados na hora, e os registros de
               auditoria são anonimizados (sem vínculo com o usuário nem endereço IP), ressalvadas
               hipóteses de guarda obrigatória por lei.
             </p>
