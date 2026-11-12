@@ -13,7 +13,6 @@ import uuid
 from app.audit.models import AuditLog
 from app.evaluation.models import AnswerEvaluation, InterviewEvaluation
 from app.interview.service import QUESTION_BANK
-
 from tests.integration.apoio import iniciar_entrevista_mock, responder, usuario_autenticado
 
 RESPOSTA_DETALHADA = (

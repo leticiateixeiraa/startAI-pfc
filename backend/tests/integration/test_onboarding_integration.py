@@ -9,7 +9,6 @@ import uuid
 from app.audit.models import AuditLog
 from app.onboarding.models import CareerOnboarding
 from app.onboarding.questionario import PERGUNTAS
-
 from tests.integration.apoio import SENHA, usuario_autenticado
 
 

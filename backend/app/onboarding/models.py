@@ -9,7 +9,7 @@ import uuid
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func, false
+from sqlalchemy.sql import false, func
 
 from app.models.base import Base
 

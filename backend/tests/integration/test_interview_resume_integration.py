@@ -7,7 +7,6 @@ continuar exatamente da pergunta pendente. Só o Gemini é simulado.
 import uuid
 
 from app.interview.service import QUESTION_BANK
-
 from tests.integration.apoio import (
     iniciar_entrevista_mock,
     montar_entrevista_ia,

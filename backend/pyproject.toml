@@ -1,0 +1,58 @@
+# Configuração das ferramentas de qualidade do backend (pytest e Ruff).
+# As dependências da aplicação continuam no requirements.txt.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# --strict-markers: um marker digitado errado vira erro, e não um filtro
+# que seleciona zero testes em silêncio.
+addopts = "--strict-markers"
+markers = [
+    "unit: teste unitário (sem banco, sem servidor HTTP e sem rede); aplicado a tests/unit/",
+    "integration: teste de integração (API HTTP + service + banco de teste SQLite); aplicado a tests/integration/",
+]
+
+[tool.ruff]
+# Mesma versão de Python do deploy (render.yaml) e da pipeline de CI.
+target-version = "py312"
+line-length = 120
+extend-exclude = ["venv"]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle (erros de estilo: indentação, espaços, linhas longas...)
+    "W",  # pycodestyle (avisos: espaço no fim da linha, newline no fim do arquivo)
+    "F",  # Pyflakes (imports e variáveis não usados, nomes indefinidos)
+    "I",  # isort (ordem e agrupamento dos imports)
+    "N",  # pep8-naming (nomes de classes, funções e variáveis)
+    "B",  # flake8-bugbear (armadilhas comuns: argumento padrão mutável, zip sem strict...)
+]
+ignore = [
+    # N818 exige o sufixo "Error" em exceções. O time nomeia exceções de
+    # domínio em português (ArquivoInvalido, SemPerfil, VagasIndisponiveis),
+    # e o nome já deixa claro que é um erro.
+    "N818",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Catálogos de dados com um registro por linha (cada linha é um recurso ou
+# uma pergunta). Quebrar os registros pioraria a leitura e os diffs; o
+# limite de linha continua valendo para todo o resto do código.
+"app/roadmap/recursos.py" = ["E501"]
+"app/onboarding/questionario.py" = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Depends(), Query(), File()... como valor padrão é o padrão do FastAPI,
+# não o bug de "argumento padrão avaliado uma vez só" que a B008 procura.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Header",
+    "fastapi.Security",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "tests"]

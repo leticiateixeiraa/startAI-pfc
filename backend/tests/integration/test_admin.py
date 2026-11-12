@@ -10,7 +10,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.scripts.promote_admin import alterar_papel, main as promote_main
+from app.scripts.promote_admin import alterar_papel
+from app.scripts.promote_admin import main as promote_main
 
 SENHA = "senha-forte-123!"
 
@@ -130,7 +131,9 @@ def test_login_bloqueado_e_desbloqueio_ficam_na_auditoria(client):
     acoes = {log["action"] for log in logs}
     assert "auth.login_blocked" in acoes
 
-    eventos_admin = client.get("/admin/audit/logs", params={"action": "admin.user_blocked"}, headers=headers_admin).json()
+    eventos_admin = client.get(
+        "/admin/audit/logs", params={"action": "admin.user_blocked"}, headers=headers_admin
+    ).json()
     assert any(log["resource_id"] == alvo["id"] for log in eventos_admin)
     # Depois de reativada, a conta volta a logar
     assert client.post("/auth/login", json={"email": email, "password": SENHA}).status_code == 200
@@ -234,7 +237,11 @@ def test_eventos_de_entrevista_e_consentimento_registram_ip(client):
     email = _cadastrar(client, "com_ip")
     headers = _login(client, email)
     sessao = client.post("/interviews/mock-start", json={"category": "entrevista_de_emprego"}, headers=headers).json()
-    client.post(f"/interviews/{sessao['session_id']}/answer", json={"answer_text": "Uma resposta com detalhes suficientes para o teste"}, headers=headers)
+    client.post(
+        f"/interviews/{sessao['session_id']}/answer",
+        json={"answer_text": "Uma resposta com detalhes suficientes para o teste"},
+        headers=headers,
+    )
 
     alvo = client.get("/admin/users", params={"search": email}, headers=headers_admin).json()[0]
     logs = client.get("/admin/audit/logs", params={"user_id": alvo["id"]}, headers=headers_admin).json()

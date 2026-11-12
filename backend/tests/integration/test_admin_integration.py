@@ -13,7 +13,6 @@ from datetime import date, timedelta
 
 from app.audit.models import AuditLog
 from app.auth.models import User
-
 from tests.integration.apoio import (
     SENHA,
     admin_autenticado,
@@ -21,7 +20,6 @@ from tests.integration.apoio import (
     responder,
     usuario_autenticado,
 )
-
 
 # --- Segurança: mesmo endpoint protegido, três perfis -----------------------
 
@@ -111,7 +109,9 @@ def test_atualizar_status_reativando_usuario_deve_retornar_200_e_registrar_audit
     assert api.post("/auth/login", json={"email": aluno["email"], "password": SENHA}).status_code == 200
     acoes = [
         log.action
-        for log in db.query(AuditLog).filter(AuditLog.resource_id == aluno["id"], AuditLog.user_id == uuid.UUID(admin["id"]))
+        for log in db.query(AuditLog).filter(
+            AuditLog.resource_id == aluno["id"], AuditLog.user_id == uuid.UUID(admin["id"])
+        )
     ]
     assert sorted(acoes) == ["admin.user_blocked", "admin.user_unblocked"]
 

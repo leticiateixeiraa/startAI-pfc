@@ -64,7 +64,9 @@ def update_item_status(
     if not roadmap or not item:
         raise HTTPException(status_code=404, detail="Roadmap ou etapa não encontrada")
     item.status = payload.status
-    record_event(db, "roadmap.item_updated", uuid.UUID(user_id), "roadmap_item", str(item.id), {"status": payload.status})
+    record_event(
+        db, "roadmap.item_updated", uuid.UUID(user_id), "roadmap_item", str(item.id), {"status": payload.status}
+    )
     db.commit()
     db.refresh(roadmap)
     return _to_response(db, roadmap)

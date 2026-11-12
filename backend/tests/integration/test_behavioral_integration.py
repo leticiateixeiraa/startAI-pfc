@@ -13,7 +13,6 @@ requisição podia ser desfeita pelo fechamento da sessão do servidor.
 import uuid
 
 from app.behavioral.models import BehavioralProfile
-
 from tests.integration.apoio import (
     SENHA,
     montar_entrevista_ia,

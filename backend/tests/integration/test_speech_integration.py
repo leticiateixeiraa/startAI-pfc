@@ -12,7 +12,6 @@ import wave
 
 from app.audit.models import AuditLog
 from app.interview.models import InterviewAnswer
-
 from tests.integration.apoio import (
     iniciar_entrevista_mock,
     responder,

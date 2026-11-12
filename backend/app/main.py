@@ -7,21 +7,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import inspect, text
 
 from app import config
-from app.models.base import Base, engine
-from app.auth.router import router as auth_router
-from app.interview.router import router as interview_router
-from app.questions.router import router as questions_router
+from app.admin.router import router as admin_router
 from app.audit.router import router as audit_router
+from app.auth.router import router as auth_router
+from app.behavioral.router import router as behavioral_router
+from app.evaluation.router import router as evaluation_router
+from app.interview.router import router as interview_router
+from app.jobs.router import router as jobs_router
+from app.models.base import Base, engine
+from app.onboarding.router import router as onboarding_router
+from app.questions.router import router as questions_router
+from app.resume.router import router as resume_router
 from app.roadmap.router import interview_router as roadmap_interview_router
 from app.roadmap.router import router as roadmap_router
-from app.admin.router import router as admin_router
-from app.evaluation.router import router as evaluation_router
-from app.behavioral.router import router as behavioral_router
-from app.onboarding.router import router as onboarding_router
 from app.speech.router import router as speech_router
-from app.jobs.router import router as jobs_router
-from app.resume.router import router as resume_router
-
 
 app = FastAPI(title="StartAI API")
 

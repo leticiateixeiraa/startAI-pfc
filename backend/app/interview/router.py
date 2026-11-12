@@ -13,6 +13,7 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.audit.service import record_event
 from app.auth.dependencies import get_current_user
 from app.evaluation.models import InterviewEvaluation
 from app.interview import service
@@ -26,7 +27,6 @@ from app.interview.schemas import (
     StartInterviewOut,
 )
 from app.models.base import get_db
-from app.audit.service import record_event
 
 router = APIRouter(prefix="/interviews", tags=["interview"])
 

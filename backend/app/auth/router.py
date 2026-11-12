@@ -11,8 +11,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.models.base import get_db
+from app.audit.service import record_event
 from app.auth.dependencies import get_current_user
+from app.auth.email_service import ErroEnvioEmail, enviar_email_redefinicao_senha
 from app.auth.models import PasswordResetToken, User
 from app.auth.schemas import (
     DeleteAccountRequest,
@@ -31,9 +32,8 @@ from app.auth.service import (
     gerar_token_redefinicao,
     verificar_senha,
 )
-from app.auth.email_service import ErroEnvioEmail, enviar_email_redefinicao_senha
-from app.audit.service import record_event
 from app.lgpd.service import ExclusaoNaoPermitida, excluir_conta
+from app.models.base import get_db
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -176,7 +176,10 @@ def esqueci_senha(payload: ForgotPasswordRequest, request: Request, db: Session 
     try:
         enviar_email_redefinicao_senha(user.email, token_bruto)
     except ErroEnvioEmail as exc:
-        raise HTTPException(status_code=502, detail="Não foi possível enviar o e-mail agora. Tente de novo mais tarde.") from exc
+        raise HTTPException(
+            status_code=502,
+            detail="Não foi possível enviar o e-mail agora. Tente de novo mais tarde.",
+        ) from exc
 
     return resposta
 
