@@ -32,6 +32,6 @@ e-mail, e não um erro da própria API.
 
 ## Testes
 
-`backend/tests/test_reset_password.py` cobre: token válido, token
+`backend/tests/integration/test_reset_password.py` cobre: token válido, token
 inexistente, token expirado, token já usado, e a não revelação de quais
 e-mails têm conta cadastrada.

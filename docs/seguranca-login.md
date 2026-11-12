@@ -72,8 +72,8 @@ de origem. A senha digitada — certa ou errada — nunca é registrada.
 
 ## Testes
 
-`backend/tests/test_auth.py` cobre o fluxo de cadastro, login (sucesso e
-falha) e a rota `/auth/me`; `backend/tests/test_interview.py` cobre, entre
+`backend/tests/integration/test_auth.py` cobre o fluxo de cadastro, login (sucesso e
+falha) e a rota `/auth/me`; `backend/tests/integration/test_interview.py` cobre, entre
 outras coisas, a autorização entre usuários diferentes (403 ao tentar
 responder a sessão de outra pessoa).
 

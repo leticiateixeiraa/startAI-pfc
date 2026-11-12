@@ -1,0 +1,12 @@
+# Configuração das ferramentas de qualidade do backend (pytest e Ruff).
+# As dependências da aplicação continuam no requirements.txt.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# --strict-markers: um marker digitado errado vira erro, e não um filtro
+# que seleciona zero testes em silêncio.
+addopts = "--strict-markers"
+markers = [
+    "unit: teste unitário (sem banco, sem servidor HTTP e sem rede); aplicado a tests/unit/",
+    "integration: teste de integração (API HTTP + service + banco de teste SQLite); aplicado a tests/integration/",
+]

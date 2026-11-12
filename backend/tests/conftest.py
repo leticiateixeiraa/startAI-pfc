@@ -19,6 +19,7 @@ ser importada.
 """
 import os
 from datetime import datetime, timezone
+from pathlib import Path
 
 # As variáveis precisam existir ANTES de importar a aplicação, porque
 # `app.models.base` e `app.auth.service` se recusam a carregar sem elas.
@@ -130,3 +131,30 @@ def sem_servicos_externos(monkeypatch):
         "app.questions.llm_service.genai.Client", _servico_externo_bloqueado
     )
     monkeypatch.setattr("app.jobs.jooble.httpx.post", _servico_externo_bloqueado)
+
+
+# --- Separação entre testes unitários e de integração ----------------------
+# A pasta decide o grupo: tudo em tests/unit/ recebe o marker `unit` e tudo
+# em tests/integration/ recebe `integration`. Assim a pipeline de CI roda
+# cada grupo isoladamente (`pytest -m unit` e `pytest -m integration`) sem
+# precisar decorar teste por teste.
+PASTA_TESTES = Path(__file__).resolve().parent
+GRUPOS_POR_PASTA = {"unit": "unit", "integration": "integration"}
+
+
+def pytest_collection_modifyitems(config, items):
+    fora_dos_grupos = []
+    for item in items:
+        pasta = item.path.resolve().relative_to(PASTA_TESTES).parts[0]
+        grupo = GRUPOS_POR_PASTA.get(pasta)
+        if grupo is None:
+            fora_dos_grupos.append(item.nodeid)
+        else:
+            item.add_marker(getattr(pytest.mark, grupo))
+    # Um teste fora das duas pastas não seria executado por nenhuma das
+    # checagens da CI, e passaria despercebido. Melhor falhar na hora.
+    if fora_dos_grupos:
+        raise pytest.UsageError(
+            "Testes fora de tests/unit/ e tests/integration/: "
+            + ", ".join(fora_dos_grupos)
+        )
