@@ -18,7 +18,7 @@ def test_post_interviews_deve_gravar_o_nivel_e_enviar_ao_gemini(api, db, gemini_
     session_id = resposta.json()["session_id"]
     db.expire_all()
     assert db.query(InterviewSession).filter_by(id=uuid.UUID(session_id)).one().seniority == "pleno"
-    assert "Nível da vaga: QUEBRADO" in gemini_falso.prompts[0]
+    assert "Nível da vaga: Pleno" in gemini_falso.prompts[0]
     historico = api.get("/interviews/history", headers=headers).json()
     assert historico[0]["seniority"] == "pleno"
 
