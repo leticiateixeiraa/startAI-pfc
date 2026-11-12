@@ -15,7 +15,7 @@ def test_arquetipo_deve_ser_a_competencia_com_maior_nota():
     arquetipo = definir_arquetipo(_notas(lideranca=9))
 
     assert arquetipo["key"] == "lideranca"
-    assert arquetipo["name"] == "Perfil QUEBRADO"
+    assert arquetipo["name"] == "Perfil de Liderança"
 
 
 def test_empate_deve_respeitar_a_ordem_das_competencias():
