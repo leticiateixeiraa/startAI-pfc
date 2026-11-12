@@ -1,3 +1,4 @@
+import os  
 """
 Carregamento das variáveis de ambiente, em um lugar só.
 
