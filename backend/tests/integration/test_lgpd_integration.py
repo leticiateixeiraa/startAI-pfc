@@ -17,7 +17,6 @@ from app.evaluation.models import AnswerEvaluation, InterviewEvaluation
 from app.interview.models import InterviewAnswer, InterviewQuestion, InterviewSession
 from app.interview.service import QUESTION_BANK
 from app.roadmap.models import LearningRoadmap, LearningRoadmapItem
-
 from tests.integration.apoio import (
     SENHA,
     admin_autenticado,

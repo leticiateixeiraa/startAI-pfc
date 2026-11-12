@@ -20,7 +20,6 @@ from app.interview.models import InterviewAnswer, InterviewSession
 from app.jobs import jooble
 from app.jobs.models import JobRecommendation
 from app.onboarding.models import CareerOnboarding
-
 from tests.integration.apoio import SENHA, usuario_autenticado
 
 URL = "/jobs/recommendations"

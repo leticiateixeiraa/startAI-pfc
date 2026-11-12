@@ -15,7 +15,6 @@ from datetime import datetime, timedelta, timezone
 from app.audit.models import AuditLog
 from app.auth.models import PasswordResetToken, User
 from app.auth.service import gerar_hash_token, verificar_senha
-
 from tests.integration.apoio import SENHA, autenticar, cadastrar, montar_cadastro
 
 NOVA_SENHA = "NovaSenha#2027"

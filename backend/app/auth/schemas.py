@@ -1,7 +1,6 @@
 import uuid
-from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, field_validator
 
 # feat(lgpd): versão vigente do Termo de Uso / Política de Privacidade.
 # Ao publicar uma nova versão dos documentos, incremente este valor
@@ -42,7 +41,7 @@ class UserCreate(BaseModel):
                 "É necessário aceitar o Termo de Uso e a Política de Privacidade para se cadastrar."
             )
         return value
-    
+
     @field_validator("password")
     @classmethod
     def validar_forca_da_senha(cls, value: str) -> str:

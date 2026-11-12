@@ -5,7 +5,6 @@ Só o Gemini é simulado.
 import uuid
 
 from app.interview.models import InterviewSession
-
 from tests.integration.apoio import montar_entrevista_ia, perguntas_geradas, usuario_autenticado
 
 

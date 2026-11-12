@@ -47,7 +47,6 @@ from sqlalchemy.pool import StaticPool  # noqa: E402
 
 import app.models.base as base  # noqa: E402
 
-
 engine_de_teste = create_engine(
     "sqlite://",
     # StaticPool mantém UMA conexão viva: é ela que guarda o banco em memória.

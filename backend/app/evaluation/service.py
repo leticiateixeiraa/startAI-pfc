@@ -82,7 +82,9 @@ def gerar_avaliacao(db: Session, session: InterviewSession) -> tuple[InterviewEv
     db.add(avaliacao)
     db.flush()  # gera o id usado pelas avaliações de cada resposta
 
-    for resposta, item, nota in zip(respostas, resultado["answers"], notas):
+    # strict=True: avaliar_respostas devolve exatamente uma avaliação por
+    # resposta; se um dia isso mudar, o erro aparece em vez de sumir resposta.
+    for resposta, item, nota in zip(respostas, resultado["answers"], notas, strict=True):
         db.add(
             AnswerEvaluation(
                 evaluation_id=avaliacao.id,

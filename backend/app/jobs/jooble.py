@@ -128,7 +128,9 @@ def buscar_vagas(termo: str) -> list[dict]:
         raise VagasIndisponiveis(mensagem) from error
     except (httpx.HTTPError, ValueError) as error:
         logger.warning("Falha ao consultar a Jooble: %s", type(error).__name__)
-        raise VagasIndisponiveis("O serviço de vagas não respondeu agora. Tente novamente em alguns minutos.") from error
+        raise VagasIndisponiveis(
+            "O serviço de vagas não respondeu agora. Tente novamente em alguns minutos."
+        ) from error
 
     resultados = dados.get("jobs") if isinstance(dados, dict) else None
     if not isinstance(resultados, list):

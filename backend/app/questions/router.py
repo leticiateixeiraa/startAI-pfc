@@ -3,14 +3,13 @@ import uuid
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
+from app.audit.service import record_event
 from app.auth.dependencies import get_current_user
 from app.interview.models import InterviewQuestion
 from app.models.base import get_db
 from app.questions import service
 from app.questions.llm_service import LLMGenerationError
 from app.questions.schemas import CategoryOut, InterviewSessionOut, StartInterviewIn
-from app.audit.service import record_event
-
 
 router = APIRouter(tags=["questions"])
 

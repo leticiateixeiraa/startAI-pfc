@@ -11,7 +11,6 @@ import zipfile
 
 from app.audit.models import AuditLog
 from app.resume.models import ResumeAnalysis
-
 from tests.integration.apoio import SENHA, usuario_autenticado
 
 PDF = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"
@@ -62,7 +61,12 @@ def test_analyze_de_pdf_deve_retornar_200_com_a_analise_e_registrar_auditoria(ap
     assert corpo["file_name"] == "curriculo.pdf"
     assert corpo["target_role"] == "Desenvolvedor Back-end"
     assert [c["key"] for c in corpo["criteria"]][0] == "structure"
-    evento = db.query(AuditLog).filter(AuditLog.action == "resume.analyzed").order_by(AuditLog.created_at.desc()).first()
+    evento = (
+        db.query(AuditLog)
+        .filter(AuditLog.action == "resume.analyzed")
+        .order_by(AuditLog.created_at.desc())
+        .first()
+    )
     # A auditoria guarda só metadados, nunca o conteúdo nem o nome do arquivo.
     assert "curriculo.pdf" not in (evento.details or "")
     assert "pdf" in evento.details

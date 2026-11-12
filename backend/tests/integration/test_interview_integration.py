@@ -15,7 +15,6 @@ import uuid
 from app.audit.models import AuditLog
 from app.interview.models import InterviewAnswer, InterviewSession
 from app.interview.service import QUESTION_BANK
-
 from tests.integration.apoio import (
     iniciar_entrevista_mock,
     montar_entrevista_ia,

@@ -135,12 +135,18 @@ def nivel_recomendado(nivel_treinado: str, media: float | None) -> tuple[str, st
     """RN02. Devolve (nível, explicação para o aluno)."""
     rotulo = SENIORITY_LEVELS[nivel_treinado]["label"]
     if media is None:
-        return nivel_treinado, f"Você treinou para o nível {rotulo}. Depois da primeira avaliação, o nível passa a considerar suas notas."
+        return nivel_treinado, (
+            f"Você treinou para o nível {rotulo}. "
+            "Depois da primeira avaliação, o nível passa a considerar suas notas."
+        )
     nota = f"{media:.1f}".replace(".", ",")
     if media >= 7:
         return nivel_treinado, f"Sua nota média é {nota}: você está preparado(a) para vagas de nível {rotulo}."
     if media >= 4:
-        return nivel_treinado, f"Sua nota média é {nota}. As vagas são de nível {rotulo}, mas vale treinar mais para chegar bem na entrevista."
+        return nivel_treinado, (
+            f"Sua nota média é {nota}. As vagas são de nível {rotulo}, "
+            "mas vale treinar mais para chegar bem na entrevista."
+        )
     indice = max(0, NIVEIS.index(nivel_treinado) - 1)
     abaixo = NIVEIS[indice]
     if abaixo == nivel_treinado:
@@ -262,7 +268,8 @@ def calcular_compatibilidade(vaga: dict, perfil: dict) -> tuple[int, list[str]]:
         pontos_habilidades = 10
     if citadas:
         lista = ", ".join(citadas[:3])
-        motivos.append(f"Cita {lista}, que aparece no seu perfil" if len(citadas) == 1 else f"Cita {lista}, que aparecem no seu perfil")
+        verbo = "aparece" if len(citadas) == 1 else "aparecem"
+        motivos.append(f"Cita {lista}, que {verbo} no seu perfil")
 
     return round(pontos_titulo + pontos_nivel + pontos_habilidades), motivos
 

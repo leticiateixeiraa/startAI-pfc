@@ -10,7 +10,6 @@ import uuid
 from app.audit.models import AuditLog
 from app.roadmap.models import LearningRoadmap, LearningRoadmapItem
 from app.roadmap.recursos import RECURSOS
-
 from tests.integration.apoio import (
     SENHA,
     montar_entrevista_ia,
