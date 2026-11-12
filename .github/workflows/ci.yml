@@ -1,0 +1,100 @@
+# Integração contínua do backend do StartAI.
+#
+# Roda a cada Pull Request aberto ou atualizado contra a main, em uma máquina
+# limpa do GitHub. São 3 jobs independentes, que rodam em paralelo e aparecem
+# como 3 checks separados no PR:
+#
+#   Testes unitários      pytest -m unit         (tests/unit, sem banco nem rede)
+#   Testes de integração  pytest -m integration  (tests/integration, API + SQLite de teste)
+#   Linter                ruff check             (regras em backend/pyproject.toml)
+#
+# Não há deploy aqui (isso seria CD): o objetivo é só barrar o PR antes da
+# revisão humana quando algo quebra.
+
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+# Permissão mínima: os jobs só precisam ler o código do repositório.
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  testes-unitarios:
+    name: Testes unitários
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configurar Python 3.12 (com cache do pip)
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Rodar somente os testes unitários
+        run: python -m pytest -m unit
+
+  testes-integracao:
+    name: Testes de integração
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configurar Python 3.12 (com cache do pip)
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      # O banco de teste é um SQLite em memória criado pelo tests/conftest.py;
+      # Gemini, SMTP e Jooble são simulados. Nenhum segredo é necessário.
+      - name: Rodar somente os testes de integração
+        run: python -m pytest -m integration
+
+  linter:
+    name: Linter
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Configurar Python 3.12 (com cache do pip)
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Instalar o Ruff
+        run: pip install -r requirements-dev.txt
+
+      # --output-format=github marca cada violação na linha do arquivo, na
+      # aba "Files changed" do PR.
+      - name: Rodar o Ruff
+        run: ruff check --output-format=github .
