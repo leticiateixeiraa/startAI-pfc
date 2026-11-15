@@ -16,7 +16,9 @@ if not DATABASE_URL:
 
 # lc_messages=C deixa as mensagens de erro do PostgreSQL em inglês, sem
 # acentos quebrados no Windows. A opção só existe no PostgreSQL.
-connect_args = {"options": "-c lc_messages=C"} if DATABASE_URL.startswith("postgresql") else {}
+# Bancos gerenciados (Render) não permitem mudar lc_messages; só no PostgreSQL local.
+_banco_local = "@localhost" in DATABASE_URL or "@127.0.0.1" in DATABASE_URL
+connect_args = {"options": "-c lc_messages=C"} if DATABASE_URL.startswith("postgresql") and _banco_local else {}
 engine = create_engine(
     DATABASE_URL,
     connect_args=connect_args,
