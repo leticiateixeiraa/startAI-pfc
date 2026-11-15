@@ -34,7 +34,7 @@ O **StartAI** propõe resolver essa lacuna com uma plataforma web que:
 ## Links
 
 - **Repositório:** https://github.com/leticiateixeiraa/startAI-pfc
-- **Sistema publicado:** _(colocar aqui a URL da Vercel após o deploy)_
+- **Sistema publicado:** https://start-ai-pfc.vercel.app (API: https://startai-api.onrender.com/docs)
 - **Protótipo inicial:** [Excalidraw](https://excalidraw.com/#room=c32bc75f252f581eb196,eyeJOwdcVDtgzDAnt68_bw)
 - **Evidências de desenvolvimento:** [docs/evidencias](docs/evidencias/README.md) (prints de cada funcionalidade e resultados dos testes)
 
