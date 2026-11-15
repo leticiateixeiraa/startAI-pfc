@@ -12,3 +12,4 @@ httpx
 google-genai
 tzdata
 python-multipart
+psycopg[binary]
