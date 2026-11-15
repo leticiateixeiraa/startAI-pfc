@@ -1,8 +1,8 @@
 # StartAI
 
-**Simulador Inteligente de Entrevistas e Apresentações com Feedback de Oratória por Inteligência Artificial**
+**Simulador Inteligente de Entrevistas e Apresentações com Feedback por Inteligência Artificial**
 
-Plataforma web para treinamento de comunicação de estudantes por meio de entrevistas simuladas, com perguntas geradas por IA e análise automática da fala.
+Plataforma web para treinamento de comunicação de estudantes por meio de entrevistas simuladas, com perguntas geradas por IA e avaliação automática das respostas.
 
 Projeto Final de Curso (PFC) — Bacharelado em Engenharia de Software, Universidade de Mogi das Cruzes (UMC).
 
@@ -14,9 +14,12 @@ A comunicação oral é um dos fatores mais relevantes para o sucesso em entrevi
 
 O **StartAI** propõe resolver essa lacuna com uma plataforma web que:
 - gera perguntas dinamicamente por meio de Inteligência Artificial, adaptadas à vaga ou ao tipo de apresentação escolhida;
-- transcreve as respostas faladas usando reconhecimento automático de fala (Speech-to-Text);
-- analisa a oratória do usuário, identificando métricas como vícios de linguagem, palavras repetidas, duração e velocidade da fala;
-- mantém um histórico de sessões para que o estudante acompanhe sua evolução ao longo do tempo.
+- aceita respostas por texto ou por voz, com transcrição automática da fala (Speech-to-Text);
+- avalia cada resposta por IA (relevância, coerência, completude e adequação), com nota, pontos de melhoria e sugestão de resposta;
+- analisa o currículo do estudante e sugere melhorias;
+- gera trilhas de estudo a partir dos pontos fracos e recomenda vagas reais compatíveis com o desempenho;
+- mantém um histórico de sessões para que o estudante acompanhe sua evolução ao longo do tempo;
+- oferece um painel administrativo com métricas, gestão de usuários e auditoria, em conformidade com a LGPD.
 
 ## Equipe
 
@@ -31,7 +34,8 @@ O **StartAI** propõe resolver essa lacuna com uma plataforma web que:
 ## Links
 
 - **Repositório:** https://github.com/leticiateixeiraa/startAI-pfc
-- **Protótipo:** [Excalidraw](https://excalidraw.com/#room=c32bc75f252f581eb196,eyeJOwdcVDtgzDAnt68_bw)
+- **Sistema publicado:** _(colocar aqui a URL da Vercel após o deploy)_
+- **Protótipo inicial:** [Excalidraw](https://excalidraw.com/#room=c32bc75f252f581eb196,eyeJOwdcVDtgzDAnt68_bw)
 - **Evidências de desenvolvimento:** [docs/evidencias](docs/evidencias/README.md) (prints de cada funcionalidade e resultados dos testes)
 
 ---
@@ -46,24 +50,26 @@ Escopo definido na Ficha de Caracterização do projeto. Situação em novembro/
 | 2 | Seleção da vaga/tipo de apresentação e perguntas geradas por IA | Leonardo | ✅ Pronta |
 | 3 | Entrevistador dinâmico (adaptação das perguntas às respostas) | Gabriel | ✅ Pronta |
 | 4 | Captura de áudio e transcrição da resposta (Speech-to-Text) | Gabriel | ✅ Pronta |
-| 5 | Analisador de oratória (vícios, repetições, duração, palavras por minuto) | Gabriel | ⏳ Em andamento (a transcrição já guarda o texto literal e a duração) |
+| 5 | Análise de currículo por IA (substituiu o analisador de oratória) | Gabriel | ✅ Pronta |
 | 6 | Histórico de entrevistas e painel de evolução | Leonardo | ✅ Pronta |
 | 7 | Recomendação de vagas compatíveis com o perfil do aluno | Letícia | ✅ Pronta |
 | 8 | Trilhas de estudo personalizadas | Leonardo | ✅ Pronta |
 | 9 | Avaliação do conteúdo das respostas por IA (nota e feedback) | Letícia | ✅ Pronta |
-| 10 | Painel administrativo (usuários, auditoria geral e métricas) | Letícia | ✅ Pronta |
+| 10 | Painel administrativo (usuários, auditoria geral, métricas e exclusão LGPD) | Letícia | ✅ Pronta |
 
-**Além das 10 funcionalidades:** análise de currículo por IA, na página **Meu perfil** (veja [Análise de currículo](#análise-de-currículo)).
+**Mudança de escopo:** o analisador de oratória (funcionalidade 5 da ficha) foi substituído pela [análise de currículo](#análise-de-currículo), decisão da equipe registrada na monografia.
 
-**Fora do escopo:** análise de linguagem corporal por vídeo, candidatura a vagas diretamente pela plataforma e recursos de gamificação ou comparação social entre usuários.
+**Além das 10 funcionalidades:** questionário de área no primeiro acesso, perfil comportamental e [exclusão de conta](#exclusão-de-conta-lgpd).
+
+**Fora do escopo:** análise de oratória (ritmo e vícios de linguagem), análise de linguagem corporal por vídeo, candidatura a vagas diretamente pela plataforma e recursos de gamificação ou comparação social entre usuários.
 
 ## Arquitetura
 
 O sistema segue o modelo cliente-servidor, dividido em camadas de apresentação, processamento e persistência:
 
-- **Apresentação:** aplicação web em React, responsável pela interação com o usuário (gerenciamento das entrevistas, gravação de áudio, relatórios e evolução do desempenho).
-- **Processamento:** API REST em FastAPI, responsável pela autenticação, gerenciamento das entrevistas, transcrição, análise de oratória e integração com serviços externos de IA.
-- **Persistência:** PostgreSQL para dados relacionais. O áudio das respostas é processado em memória e descartado logo após a transcrição: nenhum arquivo de áudio (nem de currículo) é armazenado. A transcrição roda de forma síncrona; Redis e filas assíncronas ficam como evolução futura.
+- **Apresentação:** aplicação web em React, responsável pela interação com o usuário (entrevistas, gravação de áudio, resultados, perfil, trilhas, vagas, currículo e administração).
+- **Processamento:** API REST em FastAPI, responsável pela autenticação, entrevistas, transcrição, avaliação das respostas, análise de currículo, trilhas, recomendação de vagas, auditoria e integração com os serviços externos (Gemini e Jooble).
+- **Persistência:** PostgreSQL para dados relacionais. O áudio das respostas é processado em memória e descartado logo após a transcrição: nenhum arquivo de áudio (nem de currículo) é armazenado.
 
 ## Tecnologias
 
@@ -72,17 +78,16 @@ O sistema segue o modelo cliente-servidor, dividido em camadas de apresentação
 | Front-end | React.js (TypeScript), Vite, TanStack Router/Start, TailwindCSS, shadcn/ui |
 | Back-end | Python, FastAPI |
 | Banco de dados | PostgreSQL, com SQLAlchemy (ORM) |
-| Filas / cache | Redis (previsto para processamento assíncrono; não utilizado nesta versão) |
 | APIs de IA | Google Gemini (geração e adaptação de perguntas, avaliação das respostas, transcrição do áudio e análise de currículo) |
 | API de vagas | Jooble (vagas reais no Brasil, plano gratuito) |
-| Testes | Pytest (back-end); Jest / React Testing Library (front-end) |
+| Testes e qualidade | Pytest e pytest-cov (back-end, 364 testes, 97% de cobertura); Oxlint (front-end) |
 | Segurança | JWT, bcrypt |
 | Versionamento | Git e GitHub |
 | Deploy | Front-end na Vercel; back-end e PostgreSQL no Render |
 
 ## Metodologia
 
-Desenvolvimento conduzido com **Scrum** (SCHWABER; SUTHERLAND, 2020), com gestão das tarefas em quadro Kanban no Trello. Requisitos levantados por meio de histórias de usuário; modelagem apoiada em prototipação de telas e Diagrama de Casos de Uso (UML); validação por testes com usuários-piloto ao final de cada sprint.
+Desenvolvimento conduzido com **Scrum** (SCHWABER; SUTHERLAND, 2020), com gestão das tarefas em quadro Kanban no Trello. Requisitos levantados por meio de histórias de usuário; modelagem com prototipação de telas, Diagrama de Classes (UML) e BPMN; validação por revisão de sprint com o grupo e testes automatizados.
 
 ## Cronograma macro
 
@@ -99,7 +104,7 @@ Desenvolvimento conduzido com **Scrum** (SCHWABER; SUTHERLAND, 2020), com gestã
 
 ## Privacidade e LGPD
 
-O sistema trata dados pessoais do usuário (cadastro, áudio das respostas, transcrições, métricas de oratória e a análise do currículo). Os áudios e os arquivos de currículo são descartados após o processamento (só o texto transcrito e o resultado da análise ficam salvos), as senhas são armazenadas com criptografia (bcrypt) e o usuário pode excluir a própria conta e todos os dados a qualquer momento, na página **Minha conta**.
+O sistema trata dados pessoais do usuário (cadastro, áudio das respostas, transcrições, avaliações, vagas recomendadas e a análise do currículo). Os áudios e os arquivos de currículo são descartados após o processamento (só o texto transcrito e o resultado da análise ficam salvos), as senhas são armazenadas com criptografia (bcrypt) e o usuário pode excluir a própria conta e todos os dados a qualquer momento, na página **Minha conta**.
 
 ## Auditoria e logs
 
@@ -133,8 +138,10 @@ O sistema tem dois papéis: **usuário** (padrão de todo cadastro) e
 
 - **Painel** (`GET /admin/metrics`): usuários, entrevistas, taxa de conclusão,
   logins com falha, entrevistas por dia e por tipo;
-- **Usuários** (`GET /admin/users`, `PATCH /admin/users/{id}`): busca e
-  desativação/reativação de contas. Conta desativada perde o acesso na hora;
+- **Usuários** (`GET /admin/users`, `PATCH /admin/users/{id}`,
+  `DELETE /admin/users/{id}`): busca, desativação/reativação e exclusão de
+  contas (veja [Exclusão de conta](#exclusão-de-conta-lgpd)). Conta desativada
+  perde o acesso na hora;
 - **Auditoria geral** (`GET /admin/audit/logs`): eventos de todos os usuários,
   com filtros por usuário, ação e período. O próprio acesso fica auditado.
 
@@ -231,7 +238,7 @@ próprio navegador.
   para WAV mono de 16 kHz antes de enviar, então o backend recebe sempre o mesmo
   formato. Limites: 3 minutos de gravação e 10 MB por áudio.
 - **Transcrição literal:** hesitações e vícios de linguagem ("é", "né", "tipo")
-  são mantidos de propósito, para o analisador de oratória (#5).
+  são mantidos de propósito, o que permite uma futura análise de oratória.
 - **Dados salvos:** cada resposta guarda `input_mode` (`text` ou `voice`) e
   `audio_duration_seconds`, que servem para calcular palavras por minuto.
 - **Privacidade:** o áudio é lido em memória e descartado após a transcrição; a
@@ -241,8 +248,9 @@ próprio navegador.
 
 ## Análise de currículo
 
-Em **Meu perfil**, o aluno anexa o currículo e a IA devolve uma análise. Não faz
-parte das 10 funcionalidades do escopo inicial.
+Em **Meu perfil**, o aluno anexa o currículo e a IA devolve uma análise. É a
+funcionalidade 5 da versão atual, no lugar do analisador de oratória previsto
+na ficha.
 
 - **Endpoints:** `POST /resume/analyze` (multipart: `file` e `target_role`,
   opcional), `GET /resume/me` (última análise ou `null`) e `DELETE /resume/me`.
@@ -385,8 +393,17 @@ cd backend
 pytest
 ```
 
-Os testes usam um SQLite em memória e o Gemini/SMTP simulados: não precisam
-de PostgreSQL, de `.env` nem de internet. No frontend, `npm run lint` roda o
+Os testes usam um SQLite em memória e o Gemini, a Jooble e o SMTP simulados:
+não precisam de PostgreSQL, de `.env` nem de internet. Na versão de
+14/11/2026 são **364 testes, todos passando**. Para medir a cobertura (97%):
+
+```bash
+pip install pytest-cov
+pytest --cov=app --cov-report=term
+```
+
+O resultado completo está em
+[docs/evidencias/testes](docs/evidencias/testes/cobertura-backend.txt). No frontend, `npm run lint` roda o
 Oxlint e `npm run build` faz a checagem de tipos.
 
 ## Deploy
@@ -399,9 +416,10 @@ As variáveis são as mesmas do `.env`, cadastradas no painel de cada serviço.
 1. No Render: **New > Blueprint** e escolha este repositório. O arquivo
    `render.yaml` cria o banco `startai-db` e a API `startai-api` já ligados.
 2. A `DATABASE_URL` vem do banco e a `JWT_SECRET_KEY` é gerada pelo próprio
-   Render. Na criação, preencha `GEMINI_API_KEY`, `FRONTEND_URL`,
-   `CORS_ORIGINS` (a URL da Vercel) e, se quiser o e-mail, `SMTP_USER` e
-   `SMTP_PASSWORD`.
+   Render. Na criação, preencha `GEMINI_API_KEY`, `JOOBLE_API_KEY`,
+   `FRONTEND_URL`, `CORS_ORIGINS` e, se quiser o e-mail, `SMTP_USER` e
+   `SMTP_PASSWORD`. Como a Vercel ainda não existe nesse momento, use
+   `http://localhost:5173` em `FRONTEND_URL` e `CORS_ORIGINS` e troque depois.
 3. O teste de saúde usa `GET /health`. As tabelas são criadas sozinhas na
    primeira inicialização.
 
@@ -414,8 +432,37 @@ As variáveis são as mesmas do `.env`, cadastradas no painel de cada serviço.
 3. O `frontend/vercel.json` redireciona todas as rotas para o `index.html`,
    para links como `/reset-password?token=...` funcionarem ao abrir direto.
 
-Depois do primeiro deploy, volte ao Render e confira se `FRONTEND_URL` e
-`CORS_ORIGINS` estão com a URL final da Vercel.
+### Ligando os dois
+
+No Render, em **startai-api > Environment**, troque `FRONTEND_URL` e
+`CORS_ORIGINS` pela URL final da Vercel, **sem barra no final**, e salve. Sem
+isso, o site abre, mas o login falha por CORS.
+
+### Primeiro administrador em produção
+
+O plano gratuito do Render não tem terminal. O admin é definido a partir da
+sua máquina, apontando para o banco do Render:
+
+1. Cadastre a conta pelo site publicado (use uma conta de teste).
+2. No Render, em **startai-db > Connections**, copie a **External Database URL**.
+3. Na pasta `backend/`, com o venv ativo:
+
+```powershell
+$env:DATABASE_URL="EXTERNAL_DATABASE_URL_DO_RENDER"   # PowerShell
+python -m app.scripts.promote_admin email-da-conta@teste.com
+```
+
+Feche o terminal depois, para essa variável não continuar valendo.
+
+### Limites do plano gratuito
+
+- A API **dorme após 15 minutos sem uso** e leva cerca de 1 minuto para
+  acordar. Abra o site alguns minutos antes de uma apresentação.
+- O **PostgreSQL gratuito do Render expira 30 dias após a criação** (com 14 dias
+  de carência). Para uso mais longo, crie o banco no Neon (gratuito, não expira)
+  e cadastre a URL dele em `DATABASE_URL`.
+- As chaves (`GEMINI_API_KEY`, `JOOBLE_API_KEY`, SMTP) ficam só no painel do
+  Render; nunca no GitHub.
 
 ---
 
