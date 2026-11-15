@@ -32,6 +32,7 @@ O **StartAI** propõe resolver essa lacuna com uma plataforma web que:
 
 - **Repositório:** https://github.com/leticiateixeiraa/startAI-pfc
 - **Protótipo:** [Excalidraw](https://excalidraw.com/#room=c32bc75f252f581eb196,eyeJOwdcVDtgzDAnt68_bw)
+- **Evidências de desenvolvimento:** [docs/evidencias](docs/evidencias/README.md) (prints de cada funcionalidade e resultados dos testes)
 
 ---
 
